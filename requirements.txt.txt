@@ -1,6 +1,0 @@
-requests
-gspread
-oauth2client
-pytz
-schedule
-psutil
