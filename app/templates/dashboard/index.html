@@ -1,0 +1,297 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard ROI - Visão Geral{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h2 mb-3">Visão Geral do Dashboard</h1>
+            <p class="text-muted">Acompanhe as principais métricas de performance em tempo real.</p>
+        </div>
+    </div>
+
+    <!-- Alertas e Status -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-info" role="alert">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Sistema Ativo:</strong> Monitoramento automático a cada 30 minutos. 
+                Próxima atualização: <span id="next-update">--</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cards de Performance -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-line me-2"></i>Performance das Últimas 6 Horas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-bullseye me-2"></i>Metas vs Realizado
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>ROI Meta (3.0)</span>
+                            <span id="roi-goal-percent">0%</span>
+                        </div>
+                        <div class="progress mb-2">
+                            <div class="progress-bar bg-primary" id="roi-progress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>Vendas Meta (R$ 10k)</span>
+                            <span id="sales-goal-percent">0%</span>
+                        </div>
+                        <div class="progress mb-2">
+                            <div class="progress-bar bg-success" id="sales-progress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="d-flex justify-content-between">
+                            <span>Budget (R$ 3k)</span>
+                            <span id="budget-percent">0%</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-warning" id="budget-progress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela de Dados Recentes -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-table me-2"></i>Dados Recentes (Últimas 10 Horas)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Horário</th>
+                                    <th>Gasto</th>
+                                    <th>Vendas</th>
+                                    <th>ROI</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-data-table">
+                                <!-- Dados serão carregados via JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let performanceChart;
+
+    async function loadOverviewData() {
+        try {
+            // Carregar dados de performance
+            const response = await fetch('/api/roi/geral?hours=6');
+            const data = await response.json();
+            
+            updatePerformanceChart(data.data);
+            updateRecentDataTable(data.data);
+            updateGoalProgress();
+            
+        } catch (error) {
+            console.error('Erro ao carregar dados da visão geral:', error);
+        }
+    }
+
+    function updatePerformanceChart(data) {
+        const labels = data.map(item => {
+            const date = new Date(item.timestamp);
+            return date.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
+        }).reverse();
+        
+        const roiData = data.map(item => item.roi).reverse();
+        const salesData = data.map(item => item.sales).reverse();
+        const spendData = data.map(item => item.spend).reverse();
+        
+        const ctx = document.getElementById('performanceChart').getContext('2d');
+        
+        if (performanceChart) {
+            performanceChart.destroy();
+        }
+        
+        performanceChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'ROI',
+                        data: roiData,
+                        borderColor: '#3498db',
+                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Vendas (R$)',
+                        data: salesData,
+                        borderColor: '#2ecc71',
+                        backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                        fill: false,
+                        tension: 0.4,
+                        yAxisID: 'y1'
+                    },
+                    {
+                        label: 'Gasto (R$)',
+                        data: spendData,
+                        borderColor: '#e74c3c',
+                        backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                        fill: false,
+                        tension: 0.4,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'ROI'
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'Valor (R$)'
+                        },
+                        grid: {
+                            drawOnChartArea: false,
+                        },
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    }
+                }
+            }
+        });
+    }
+
+    function updateRecentDataTable(data) {
+        const tableBody = document.getElementById('recent-data-table');
+        tableBody.innerHTML = '';
+        
+        // Mostrar os últimos 10 registros
+        const recentData = data.slice(-10).reverse();
+        
+        recentData.forEach(item => {
+            const row = document.createElement('tr');
+            const date = new Date(item.timestamp);
+            const timeStr = date.toLocaleString('pt-BR');
+            
+            const statusClass = item.roi >= 3 ? 'success' : item.roi >= 2 ? 'warning' : 'danger';
+            const statusText = item.roi >= 3 ? 'Excelente' : item.roi >= 2 ? 'Bom' : 'Atenção';
+            
+            row.innerHTML = `
+                <td>${timeStr}</td>
+                <td>R$ ${item.spend.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                <td>R$ ${item.sales.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                <td>${item.roi.toFixed(2)}</td>
+                <td><span class="badge bg-${statusClass}">${statusText}</span></td>
+            `;
+            
+            tableBody.appendChild(row);
+        });
+    }
+
+    async function updateGoalProgress() {
+        try {
+            const response = await fetch('/api/dashboard/summary');
+            const data = await response.json();
+            
+            // ROI Goal Progress
+            const roiPercent = Math.min((data.current_roi / 3.0) * 100, 100);
+            document.getElementById('roi-progress').style.width = roiPercent + '%';
+            document.getElementById('roi-goal-percent').textContent = roiPercent.toFixed(1) + '%';
+            
+            // Sales Goal Progress (meta de R$ 10.000)
+            const salesPercent = Math.min((data.today_sales / 10000) * 100, 100);
+            document.getElementById('sales-progress').style.width = salesPercent + '%';
+            document.getElementById('sales-goal-percent').textContent = salesPercent.toFixed(1) + '%';
+            
+            // Budget Progress (meta de R$ 3.000)
+            const budgetPercent = Math.min((data.today_spend / 3000) * 100, 100);
+            document.getElementById('budget-progress').style.width = budgetPercent + '%';
+            document.getElementById('budget-percent').textContent = budgetPercent.toFixed(1) + '%';
+            
+        } catch (error) {
+            console.error('Erro ao atualizar progresso das metas:', error);
+        }
+    }
+
+    function updateNextUpdateTime() {
+        const now = new Date();
+        const minutes = now.getMinutes();
+        const nextUpdate = new Date(now);
+        
+        if (minutes < 30) {
+            nextUpdate.setMinutes(30, 0, 0);
+        } else {
+            nextUpdate.setHours(now.getHours() + 1, 0, 0, 0);
+        }
+        
+        document.getElementById('next-update').textContent = nextUpdate.toLocaleTimeString('pt-BR');
+    }
+
+    // Inicialização
+    document.addEventListener('DOMContentLoaded', function() {
+        loadOverviewData();
+        updateNextUpdateTime();
+        
+        // Atualizar dados a cada 30 segundos
+        setInterval(loadOverviewData, 30000);
+        
+        // Atualizar próxima atualização a cada minuto
+        setInterval(updateNextUpdateTime, 60000);
+    });
+</script>
+{% endblock %}

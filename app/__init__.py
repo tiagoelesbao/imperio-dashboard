@@ -1,0 +1,1 @@
+# Dashboard ROI - Sistema de Monitoramento de Performance

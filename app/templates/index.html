@@ -1,0 +1,312 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard ROI - Início{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h2 mb-3">Dashboard ROI - Sistema de Monitoramento</h1>
+            <p class="text-muted">Acompanhe em tempo real o desempenho das suas campanhas, vendas e afiliados.</p>
+        </div>
+    </div>
+
+    <!-- Métricas Principais -->
+    <div class="row mb-4">
+        <div class="col-md-3 col-sm-6">
+            <div class="card metric-card">
+                <div class="card-body text-center">
+                    <i class="fas fa-percentage fa-2x mb-3"></i>
+                    <div class="metric-value" id="current-roi">0</div>
+                    <div>ROI Atual</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card metric-card">
+                <div class="card-body text-center">
+                    <i class="fas fa-money-bill-wave fa-2x mb-3"></i>
+                    <div class="metric-value" id="today-sales">R$ 0</div>
+                    <div>Vendas Hoje</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card metric-card">
+                <div class="card-body text-center">
+                    <i class="fas fa-ad fa-2x mb-3"></i>
+                    <div class="metric-value" id="today-spend">R$ 0</div>
+                    <div>Gasto Hoje</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card metric-card">
+                <div class="card-body text-center">
+                    <i class="fas fa-chart-line fa-2x mb-3"></i>
+                    <div class="metric-value" id="profit-margin">0%</div>
+                    <div>Margem de Lucro</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráfico de ROI -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-area me-2"></i>ROI por Hora - Últimas 24h
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="roiChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Comparativo de Canais -->
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-globe me-2"></i>Geral
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="height: 200px;">
+                        <canvas id="geralChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fab fa-instagram me-2"></i>Instagram
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="height: 200px;">
+                        <canvas id="instagramChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fab fa-whatsapp me-2"></i>Grupos WhatsApp
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="height: 200px;">
+                        <canvas id="grupoChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Configuração global dos gráficos
+    Chart.defaults.responsive = true;
+    Chart.defaults.maintainAspectRatio = false;
+
+    let roiChart, geralChart, instagramChart, grupoChart;
+
+    // Função para carregar dados do dashboard
+    async function loadDashboardData() {
+        try {
+            const response = await fetch('/api/dashboard/summary');
+            const data = await response.json();
+            
+            // Atualizar métricas
+            document.getElementById('current-roi').textContent = data.current_roi.toFixed(2);
+            document.getElementById('today-sales').textContent = 'R$ ' + data.today_sales.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+            document.getElementById('today-spend').textContent = 'R$ ' + data.today_spend.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+            
+            const profitMargin = data.today_spend > 0 ? ((data.today_sales - data.today_spend) / data.today_sales * 100) : 0;
+            document.getElementById('profit-margin').textContent = profitMargin.toFixed(1) + '%';
+            
+        } catch (error) {
+            console.error('Erro ao carregar dados do dashboard:', error);
+        }
+    }
+
+    // Função para carregar dados de ROI
+    async function loadROIChart() {
+        try {
+            const response = await fetch('/api/roi/geral?hours=24');
+            const data = await response.json();
+            
+            const labels = data.data.map(item => {
+                const date = new Date(item.timestamp);
+                return date.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
+            }).reverse();
+            
+            const roiData = data.data.map(item => item.roi).reverse();
+            const salesData = data.data.map(item => item.sales).reverse();
+            const spendData = data.data.map(item => item.spend).reverse();
+            
+            const ctx = document.getElementById('roiChart').getContext('2d');
+            roiChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'ROI',
+                            data: roiData,
+                            borderColor: '#3498db',
+                            backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Vendas (R$)',
+                            data: salesData,
+                            borderColor: '#2ecc71',
+                            backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                            fill: false,
+                            yAxisID: 'y1'
+                        },
+                        {
+                            label: 'Gasto (R$)',
+                            data: spendData,
+                            borderColor: '#e74c3c',
+                            backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                            fill: false,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'ROI'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Valor (R$)'
+                            },
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    }
+                }
+            });
+            
+        } catch (error) {
+            console.error('Erro ao carregar gráfico de ROI:', error);
+        }
+    }
+
+    // Função para carregar gráficos por canal
+    async function loadChannelCharts() {
+        const channels = ['geral', 'instagram', 'grupo'];
+        const chartIds = ['geralChart', 'instagramChart', 'grupoChart'];
+        
+        for (let i = 0; i < channels.length; i++) {
+            try {
+                const response = await fetch(`/api/roi/${channels[i]}?hours=12`);
+                const data = await response.json();
+                
+                const labels = data.data.map(item => {
+                    const date = new Date(item.timestamp);
+                    return date.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
+                }).reverse();
+                
+                const roiData = data.data.map(item => item.roi).reverse();
+                
+                const ctx = document.getElementById(chartIds[i]).getContext('2d');
+                const chart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['ROI Atual', 'Meta'],
+                        datasets: [{
+                            data: [roiData[roiData.length - 1] || 0, Math.max(3 - (roiData[roiData.length - 1] || 0), 0)],
+                            backgroundColor: ['#3498db', '#ecf0f1'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        cutout: '70%',
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        animation: {
+                            animateRotate: true
+                        }
+                    }
+                });
+                
+                // Adicionar texto no centro
+                const centerText = (roiData[roiData.length - 1] || 0).toFixed(2);
+                chart.options.plugins.beforeDraw = function(chart) {
+                    const width = chart.width;
+                    const height = chart.height;
+                    const ctx = chart.ctx;
+                    ctx.restore();
+                    const fontSize = (height / 114).toFixed(2);
+                    ctx.font = fontSize + "em Arial";
+                    ctx.fillStyle = "#3498db";
+                    ctx.textBaseline = "middle";
+                    const text = centerText;
+                    const textX = Math.round((width - ctx.measureText(text).width) / 2);
+                    const textY = height / 2;
+                    ctx.fillText(text, textX, textY);
+                    ctx.save();
+                };
+                
+            } catch (error) {
+                console.error(`Erro ao carregar gráfico do canal ${channels[i]}:`, error);
+            }
+        }
+    }
+
+    // Função para atualizar todos os dados
+    function updateAllData() {
+        loadDashboardData();
+        loadROIChart();
+        loadChannelCharts();
+    }
+
+    // Carregar dados iniciais
+    document.addEventListener('DOMContentLoaded', function() {
+        updateAllData();
+        
+        // Atualizar dados a cada 30 segundos
+        setInterval(updateAllData, 30000);
+    });
+</script>
+{% endblock %}
