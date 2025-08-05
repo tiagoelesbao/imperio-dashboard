@@ -1,0 +1,76 @@
+{% extends "base_simple.html" %}
+
+{% block title %}Dashboard ROI - Afiliados{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h2 mb-3">Dashboard de Afiliados</h1>
+            <p class="text-muted">Monitore o desempenho da sua rede de afiliados.</p>
+        </div>
+    </div>
+
+    <!-- Campaign Info -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-info" role="alert">
+                <i class="fas fa-users me-2"></i>
+                <strong>Sorteio 200mil - Ação Atual</strong> | Sistema de Afiliados Ativo
+            </div>
+        </div>
+    </div>
+
+    <!-- Affiliate Metrics -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary">
+                <div class="card-body text-center">
+                    <i class="fas fa-users fa-2x mb-2"></i>
+                    <div class="metric-value" id="afiliados-ativos">0</div>
+                    <small>Afiliados Ativos</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success">
+                <div class="card-body text-center">
+                    <i class="fas fa-handshake fa-2x mb-2"></i>
+                    <div class="metric-value">0</div>
+                    <small>Vendas por Afiliados</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning">
+                <div class="card-body text-center">
+                    <i class="fas fa-percentage fa-2x mb-2"></i>
+                    <div class="metric-value">0%</div>
+                    <small>Comissão Média</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-info">
+                <div class="card-body text-center">
+                    <i class="fas fa-dollar-sign fa-2x mb-2"></i>
+                    <div class="metric-value">R$ 0</div>
+                    <small>Comissões Pagas</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-network-wired fa-3x text-primary mb-3"></i>
+                    <h4>Rede de Afiliados</h4>
+                    <p class="text-muted">Sistema preparado para gerenciar sua rede de parceiros.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

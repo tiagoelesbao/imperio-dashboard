@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        .metric-card:hover {
+            transform: translateY(-5px);
+        }
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .status-active { color: #28a745; }
+        .status-warning { color: #ffc107; }
+        .status-error { color: #dc3545; }
+        .collection-log {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .badge-success { background-color: #28a745; }
+        .badge-warning { background-color: #ffc107; }
+        .badge-danger { background-color: #dc3545; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 sidebar" style="background-color: #2c3e50; min-height: 100vh; padding: 0;">
+                <div class="text-center py-4">
+                    <h5 class="text-white">
+                        <i class="fas fa-chart-line"></i> ROI Império
+                    </h5>
+                </div>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/" style="color: #fff; background-color: #3498db;">
+                            <i class="fas fa-dashboard me-2"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/config" style="color: #ecf0f1;">
+                            <i class="fas fa-cog me-2"></i>Configurações
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/campaigns" style="color: #ecf0f1;">
+                            <i class="fas fa-bullhorn me-2"></i>Campanhas
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/affiliates" style="color: #ecf0f1;">
+                            <i class="fas fa-users me-2"></i>Afiliados
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/facebook" style="color: #ecf0f1;">
+                            <i class="fab fa-facebook me-2"></i>Facebook Ads
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/hourly-monitor" style="color: #ecf0f1;">
+                            <i class="fas fa-clock me-2"></i>Monitor Horário
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/history" style="color: #ecf0f1;">
+                            <i class="fas fa-history me-2"></i>Histórico
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/analytics" style="color: #ecf0f1;">
+                            <i class="fas fa-chart-bar me-2"></i>Análises
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10 py-4" style="background-color: #f8f9fa;">
+        <!-- Header -->
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h1 class="h2 mb-1">
+                            <i class="fas fa-chart-line text-primary me-2"></i>
+                            Dashboard ROI - Sorteio 200mil
+                        </h1>
+                        <p class="text-muted mb-0">
+                            <i class="fas fa-database me-1"></i>
+                            Produto ID: {{ product_id }}
+                        </p>
+                    </div>
+                    <div class="text-end">
+                        <div class="btn-group">
+                            <button class="btn btn-primary" onclick="executeCollection()">
+                                <i class="fas fa-sync me-1"></i>Coletar Agora
+                            </button>
+                            <button class="btn btn-outline-secondary" onclick="refreshData()">
+                                <i class="fas fa-refresh me-1"></i>Atualizar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Row -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="alert alert-info" role="alert">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <div class="flex-grow-1">
+                            <strong>Status:</strong> <span id="system-status">Carregando...</span><br>
+                            <small>
+                                <span id="last-collection">Última coleta: --</span> | 
+                                <span id="collections-today">Coletas hoje: 0</span> |
+                                <span id="calculation-period">Dados cumulativos de hoje (00:00 até agora)</span>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Metrics Cards -->
+        <div class="row mb-4">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card metric-card text-white">
+                    <div class="card-body text-center">
+                        <i class="fas fa-percentage fa-2x mb-2"></i>
+                        <div class="metric-value" id="roi-geral">0.00</div>
+                        <small>ROI Geral</small>
+                        <div class="small">Meta: 2.00</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card metric-card text-white">
+                    <div class="card-body text-center">
+                        <i class="fas fa-shopping-cart fa-2x mb-2"></i>
+                        <div class="metric-value" id="vendas-hoje">R$ 0</div>
+                        <small>Vendas Hoje</small>
+                        <div class="small">Meta: R$ 30.000</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card metric-card text-white">
+                    <div class="card-body text-center">
+                        <i class="fas fa-dollar-sign fa-2x mb-2"></i>
+                        <div class="metric-value" id="gastos-hoje">R$ 0</div>
+                        <small>Gastos Hoje</small>
+                        <div class="small" id="orcamento-hoje">Orçamento: R$ 0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card metric-card text-white">
+                    <div class="card-body text-center">
+                        <i class="fas fa-chart-line fa-2x mb-2"></i>
+                        <div class="metric-value" id="lucro-hoje">R$ 0</div>
+                        <small>Lucro Hoje</small>
+                        <div class="small" id="margem-lucro">Margem: 0%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Channels Row -->
+        <div class="row mb-4">
+            <div class="col-lg-4 mb-3">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="mb-0"><i class="fas fa-globe me-1"></i>Canal Geral</h6>
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="h4 text-primary" id="roi-geral-channel">0.00</div>
+                        <small class="text-muted">ROI do Canal</small>
+                        <div class="row mt-2">
+                            <div class="col">
+                                <small>Vendas</small>
+                                <div id="vendas-geral">R$ 0</div>
+                            </div>
+                            <div class="col">
+                                <small>Gastos</small>
+                                <div id="gastos-geral">R$ 0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-3">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h6 class="mb-0"><i class="fab fa-instagram me-1"></i>Instagram</h6>
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="h4 text-success" id="roi-instagram-channel">0.00</div>
+                        <small class="text-muted">ROI do Canal</small>
+                        <div class="row mt-2">
+                            <div class="col">
+                                <small>Vendas</small>
+                                <div id="vendas-instagram">R$ 0</div>
+                            </div>
+                            <div class="col">
+                                <small>Gastos</small>
+                                <div id="gastos-instagram">R$ 0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-3">
+                <div class="card">
+                    <div class="card-header bg-warning text-white">
+                        <h6 class="mb-0"><i class="fab fa-whatsapp me-1"></i>Grupos</h6>
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="h4 text-warning" id="roi-grupos-channel">0.00</div>
+                        <small class="text-muted">ROI do Canal</small>
+                        <div class="row mt-2">
+                            <div class="col">
+                                <small>Vendas</small>
+                                <div id="vendas-grupos">R$ 0</div>
+                            </div>
+                            <div class="col">
+                                <small>Gastos</small>
+                                <div id="gastos-grupos">R$ 0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Collection History -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-history me-2"></i>Histórico de Coletas
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="collection-log" id="collection-history">
+                            <div class="text-center text-muted py-3">
+                                <i class="fas fa-spinner fa-spin me-2"></i>Carregando histórico...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let isCollecting = false;
+
+        // Função para carregar dados do dashboard
+        async function loadDashboardData() {
+            try {
+                const response = await fetch('/api/dashboard/summary');
+                const data = await response.json();
+                
+                console.log('Dashboard data:', data);
+                
+                if (data.status === 'success') {
+                    updateMainMetrics(data.totals);
+                    updateChannels(data.channels);
+                    updateStatus('success', data.last_update);
+                } else if (data.status === 'no_data') {
+                    updateStatus('no_data');
+                } else {
+                    updateStatus('error', null, data.error);
+                }
+                
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+                updateStatus('error', null, error.message);
+            }
+        }
+
+        // Função para atualizar métricas principais
+        function updateMainMetrics(totals) {
+            console.log('Atualizando métricas, totals:', totals);
+            console.log('Budget recebido:', totals.budget);
+            
+            document.getElementById('roi-geral').textContent = totals.roi.toFixed(2);
+            document.getElementById('vendas-hoje').textContent = 'R$ ' + totals.sales.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+            document.getElementById('gastos-hoje').textContent = 'R$ ' + totals.spend.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+            document.getElementById('lucro-hoje').textContent = 'R$ ' + totals.profit.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+            document.getElementById('margem-lucro').textContent = `Margem: ${totals.margin.toFixed(1)}%`;
+            
+            // Atualizar orçamento dinâmico
+            const budget = totals.budget || 0;
+            console.log('Budget a ser exibido:', budget);
+            document.getElementById('orcamento-hoje').textContent = 'Orçamento: R$ ' + budget.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+        }
+
+        // Função para atualizar canais
+        function updateChannels(channels) {
+            const channelNames = ['geral', 'instagram', 'grupos'];
+            
+            channelNames.forEach(channel => {
+                const channelData = channels[channel] || {sales: 0, spend: 0, roi: 0};
+                
+                document.getElementById(`roi-${channel}-channel`).textContent = channelData.roi.toFixed(2);
+                document.getElementById(`vendas-${channel}`).textContent = 'R$ ' + channelData.sales.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+                document.getElementById(`gastos-${channel}`).textContent = 'R$ ' + channelData.spend.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+            });
+        }
+
+        // Função para atualizar status
+        function updateStatus(status, lastUpdate = null, error = null) {
+            const statusElement = document.getElementById('system-status');
+            
+            if (status === 'success') {
+                statusElement.innerHTML = '<span class="status-active">Sistema Ativo</span>';
+                if (lastUpdate) {
+                    const updateTime = new Date(lastUpdate).toLocaleString('pt-BR');
+                    document.getElementById('last-collection').textContent = `Última coleta: ${updateTime}`;
+                }
+            } else if (status === 'no_data') {
+                statusElement.innerHTML = '<span class="status-warning">Aguardando Primeira Coleta</span>';
+            } else if (status === 'error') {
+                statusElement.innerHTML = '<span class="status-error">Erro no Sistema</span>';
+            }
+        }
+
+        // Função para carregar status da coleta
+        async function loadCollectionStatus() {
+            try {
+                const response = await fetch('/api/collection/status');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    document.getElementById('collections-today').textContent = `Coletas hoje: ${data.data.today_collections}`;
+                }
+            } catch (error) {
+                console.error('Erro ao carregar status:', error);
+            }
+        }
+
+        // Função para carregar histórico
+        async function loadCollectionHistory() {
+            try {
+                const response = await fetch('/api/collection/history');
+                const data = await response.json();
+                
+                const historyElement = document.getElementById('collection-history');
+                
+                if (data.status === 'success' && data.data.length > 0) {
+                    const historyHtml = data.data.map(item => {
+                        // Criar indicador de crescimento de vendas se houver
+                        let growthIndicator = '';
+                        if (item.has_growth && item.sales_diff > 0) {
+                            growthIndicator = `
+                                <span class="badge bg-success ms-2" style="font-size: 0.7rem;">
+                                    <i class="fas fa-arrow-up me-1"></i>+R$ ${item.sales_diff.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
+                                </span>
+                            `;
+                        }
+                        
+                        // Criar segunda linha com informações de variação (ROI, Vendas e Lucro)
+                        let variationInfo = '';
+                        if (item.has_data_to_compare) {
+                            const salesChange = item.sales_diff >= 0 ? 
+                                `<span class="text-success">Vendas: +R$ ${item.sales_diff.toLocaleString('pt-BR', {minimumFractionDigits: 2})} (+${item.sales_percent_change.toFixed(1)}%)</span>` :
+                                `<span class="text-danger">Vendas: R$ ${item.sales_diff.toLocaleString('pt-BR', {minimumFractionDigits: 2})} (${item.sales_percent_change.toFixed(1)}%)</span>`;
+                            
+                            const roiChange = item.roi_percent_change >= 0 ?
+                                `<span class="text-success">ROI: +${item.roi_percent_change.toFixed(1)}%</span>` :
+                                `<span class="text-danger">ROI: ${item.roi_percent_change.toFixed(1)}%</span>`;
+                            
+                            const profitChange = item.profit_diff >= 0 ?
+                                `<span class="text-success">Lucro: +R$ ${item.profit_diff.toLocaleString('pt-BR', {minimumFractionDigits: 2})} (${item.profit_percent_change >= 0 ? '+' : ''}${item.profit_percent_change.toFixed(1)}%)</span>` :
+                                `<span class="text-danger">Lucro: R$ ${item.profit_diff.toLocaleString('pt-BR', {minimumFractionDigits: 2})} (${item.profit_percent_change.toFixed(1)}%)</span>`;
+                            
+                            variationInfo = `${salesChange} | ${roiChange}<br>${profitChange}`;
+                        } else {
+                            variationInfo = '<span class="text-muted">Primeira coleta</span>';
+                        }
+                        
+                        return `
+                            <div class="d-flex justify-content-between align-items-center py-2 border-bottom position-relative">
+                                <div>
+                                    <strong>${item.date} ${item.time}</strong>
+                                    <span class="badge badge-${item.status === 'success' ? 'success' : 'danger'} ms-2">${item.status}</span>
+                                    ${growthIndicator}
+                                </div>
+                                <div class="text-end">
+                                    <small>ROI: ${item.roi.toFixed(2)} | Vendas: R$ ${item.sales.toLocaleString('pt-BR')} | Lucro: R$ ${item.profit.toLocaleString('pt-BR')}</small>
+                                    <br><small class="text-muted">${variationInfo}</small>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                    
+                    historyElement.innerHTML = historyHtml;
+                } else {
+                    historyElement.innerHTML = `
+                        <div class="text-center text-muted py-3">
+                            <i class="fas fa-info-circle me-2"></i>Nenhuma coleta realizada ainda
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Erro ao carregar histórico:', error);
+            }
+        }
+
+        // Função para executar coleta
+        async function executeCollection() {
+            if (isCollecting) return;
+            
+            isCollecting = true;
+            const button = event.target.closest('button');
+            const originalText = button.innerHTML;
+            
+            button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Coletando...';
+            button.disabled = true;
+            
+            try {
+                const response = await fetch('/api/collection/execute', {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    button.innerHTML = '<i class="fas fa-check me-1"></i>Sucesso!';
+                    button.className = 'btn btn-success';
+                    
+                    // Recarregar dados após coleta
+                    setTimeout(() => {
+                        loadDashboardData();
+                        loadCollectionStatus();
+                        loadCollectionHistory();
+                    }, 1000);
+                } else {
+                    button.innerHTML = '<i class="fas fa-exclamation me-1"></i>Erro';
+                    button.className = 'btn btn-danger';
+                }
+            } catch (error) {
+                console.error('Erro na coleta:', error);
+                button.innerHTML = '<i class="fas fa-exclamation me-1"></i>Erro';
+                button.className = 'btn btn-danger';
+            } finally {
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.className = 'btn btn-primary';
+                    button.disabled = false;
+                    isCollecting = false;
+                }, 3000);
+            }
+        }
+
+        // Função para atualizar dados
+        function refreshData() {
+            loadDashboardData();
+            loadCollectionStatus();
+            loadCollectionHistory();
+        }
+
+        // Carregar dados iniciais
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                loadDashboardData();
+                loadCollectionStatus();
+                loadCollectionHistory();
+            }, 1000);
+            
+            // Atualizar a cada 30 segundos
+            setInterval(refreshData, 30000);
+        });
+    </script>
+</body>
+</html>

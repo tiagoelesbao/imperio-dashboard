@@ -1,0 +1,132 @@
+{% extends "base_simple.html" %}
+
+{% block title %}Dashboard ROI - Vendas{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h2 mb-3">Dashboard de Vendas</h1>
+            <p class="text-muted">Acompanhe o desempenho das vendas em tempo real.</p>
+        </div>
+    </div>
+
+    <!-- Campaign Info -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-success" role="alert">
+                <i class="fas fa-trophy me-2"></i>
+                <strong>Sorteio 200mil - Ação Atual</strong> | Meta Vendas: R$ 30.000/dia
+            </div>
+        </div>
+    </div>
+
+    <!-- Sales Metrics -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary">
+                <div class="card-body text-center">
+                    <i class="fas fa-shopping-cart fa-2x mb-2"></i>
+                    <div class="metric-value" id="pedidos-hoje">0</div>
+                    <small>Pedidos Hoje</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success">
+                <div class="card-body text-center">
+                    <i class="fas fa-dollar-sign fa-2x mb-2"></i>
+                    <div class="metric-value" id="faturamento-hoje">R$ 0</div>
+                    <small>Faturamento</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-info">
+                <div class="card-body text-center">
+                    <i class="fas fa-hashtag fa-2x mb-2"></i>
+                    <div class="metric-value" id="numeros-vendidos">0</div>
+                    <small>Números Vendidos</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning">
+                <div class="card-body text-center">
+                    <i class="fas fa-chart-line fa-2x mb-2"></i>
+                    <div class="metric-value" id="meta-atingida">0%</div>
+                    <small>Meta Atingida</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-shopping-bag fa-3x text-success mb-3"></i>
+                    <h4>Sistema de Vendas</h4>
+                    <p class="text-muted" id="sales-status">Pronto para registrar vendas. Meta diária: R$ 30.000</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function loadSalesData() {
+    try {
+        const [summaryResponse, salesResponse] = await Promise.all([
+            fetch('/api/dashboard/summary'),
+            fetch('/api/sales/latest?limit=1')
+        ]);
+        
+        if (summaryResponse.ok) {
+            const summaryData = await summaryResponse.json();
+            
+            const faturamento = document.getElementById('faturamento-hoje');
+            if (faturamento) {
+                faturamento.textContent = 'R$ ' + (summaryData.today_sales || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2});
+            }
+            
+            const metaAtingida = document.getElementById('meta-atingida');
+            if (metaAtingida) {
+                const percentage = ((summaryData.today_sales || 0) / 30000 * 100);
+                metaAtingida.textContent = percentage.toFixed(1) + '%';
+            }
+        }
+        
+        if (salesResponse.ok) {
+            const salesData = await salesResponse.json();
+            if (salesData.data && salesData.data.length > 0) {
+                const latest = salesData.data[0];
+                
+                const pedidos = document.getElementById('pedidos-hoje');
+                if (pedidos) {
+                    pedidos.textContent = latest.total_orders || 0;
+                }
+                
+                const numeros = document.getElementById('numeros-vendidos');
+                if (numeros) {
+                    numeros.textContent = latest.total_numbers || 0;
+                }
+            }
+        }
+        
+        const salesStatus = document.getElementById('sales-status');
+        if (salesStatus) {
+            salesStatus.innerHTML = '<i class="fas fa-check-circle me-2"></i>Sistema ativo! Dados atualizados em tempo real.';
+        }
+        
+    } catch (error) {
+        console.log('Erro ao carregar dados de vendas:', error);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(loadSalesData, 2000);
+    setInterval(loadSalesData, 30000);
+});
+</script>
+{% endblock %}

@@ -79,26 +79,6 @@
             <div class="p-3">
                 <h4><i class="fas fa-chart-line me-2"></i>Dashboard ROI</h4>
                 <hr class="text-white">
-                
-                <!-- Campaign Info -->
-                <div class="campaign-info mb-3">
-                    <div class="badge bg-success mb-2">
-                        <i class="fas fa-bullhorn me-1"></i>Campanha Ativa
-                    </div>
-                    <div class="small text-light">
-                        <strong>{{ current_campaign.name }}</strong>
-                    </div>
-                    <div class="small text-muted mb-2">
-                        Meta ROI: <span class="text-warning">{{ "%.1f"|format(current_campaign.roi_goal) }}x</span>
-                    </div>
-                    <div class="small text-muted">
-                        Orçamento: <span class="text-info">R$ {{ "{:,.0f}"|format(current_campaign.daily_budget) }}/dia</span>
-                    </div>
-                    <div class="small text-muted">
-                        Prêmio: <span class="text-success">R$ {{ "{:,.0f}"|format(current_campaign.total_budget) }}</span>
-                    </div>
-                </div>
-                <hr class="text-white">
             </div>
             
             <ul class="nav nav-pills flex-column">

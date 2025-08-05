@@ -1,131 +1,118 @@
-import asyncio
-import schedule
-import time
+#!/usr/bin/env python3
+"""
+Scheduler para coletas automáticas a cada 30 minutos
+"""
+
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.interval import IntervalTrigger
 import logging
 from datetime import datetime, timedelta
-from typing import Optional
-import os
-from .services.data_collector import run_data_collection
+import asyncio
 
 logger = logging.getLogger(__name__)
 
-class DataScheduler:
-    """Agendador otimizado para coleta de dados"""
-    
-    def __init__(self):
-        self.collection_interval = int(os.getenv("COLLECTION_INTERVAL_MINUTES", "30"))
-        self.max_retries = int(os.getenv("MAX_RETRIES", "3"))
-        self.retry_delay = int(os.getenv("RETRY_DELAY_SECONDS", "60"))
-        self.is_running = False
-        self.last_successful_run: Optional[datetime] = None
-        self.consecutive_failures = 0
-    
-    async def run_collection_with_retry(self):
-        """Executa coleta de dados com retry automático"""
-        attempt = 0
+# Criar scheduler global
+scheduler = AsyncIOScheduler()
+
+async def scheduled_collection():
+    """Executar coleta agendada"""
+    try:
+        from .database import get_db
+        from .core.data_collector import imperio_collector
+        from .core.data_manager import imperio_data_manager
         
-        while attempt < self.max_retries:
-            try:
-                logger.info(f"Iniciando coleta de dados (tentativa {attempt + 1}/{self.max_retries})")
-                
-                await run_data_collection()
-                
-                # Sucesso
-                self.last_successful_run = datetime.now()
-                self.consecutive_failures = 0
-                logger.info("Coleta de dados concluída com sucesso")
-                return
-                
-            except Exception as e:
-                attempt += 1
-                self.consecutive_failures += 1
-                
-                logger.error(f"Erro na coleta (tentativa {attempt}/{self.max_retries}): {e}")
-                
-                if attempt < self.max_retries:
-                    logger.info(f"Aguardando {self.retry_delay} segundos para nova tentativa...")
-                    await asyncio.sleep(self.retry_delay)
-                else:
-                    logger.error("Todas as tentativas de coleta falharam")
-                    
-                    # Se muitas falhas consecutivas, aumentar intervalo
-                    if self.consecutive_failures >= 3:
-                        logger.warning("Muitas falhas consecutivas, aumentando intervalo temporariamente")
-    
-    def schedule_collection(self):
-        """Agenda coleta de dados a cada N minutos"""
-        logger.info(f"Agendando coleta de dados a cada {self.collection_interval} minutos")
+        print(f"\n{'='*60}")
+        print(f"COLETA AUTOMATICA - {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
+        print(f"{'='*60}")
         
-        # Agendar para minutos específicos (0 e 30)
-        if self.collection_interval == 30:
-            schedule.every().hour.at(":00").do(self._run_async_job)
-            schedule.every().hour.at(":30").do(self._run_async_job)
-        else:
-            # Para outros intervalos, usar every N minutes
-            schedule.every(self.collection_interval).minutes.do(self._run_async_job)
-    
-    def _run_async_job(self):
-        """Wrapper para executar job assíncrono"""
-        if self.is_running:
-            logger.warning("Coleta anterior ainda em execução, pulando...")
-            return
+        # Log início da coleta
+        logger.info("INICIANDO COLETA AUTOMATICA AGENDADA")
         
-        self.is_running = True
-        try:
-            asyncio.run(self.run_collection_with_retry())
-        finally:
-            self.is_running = False
-    
-    async def run_scheduler(self):
-        """Executa o agendador principal"""
-        logger.info("Iniciando agendador de coleta de dados")
+        # Executar coleta
+        result = imperio_collector.execute_full_collection()
         
-        # Executar coleta inicial
-        await self.run_collection_with_retry()
-        
-        # Configurar agendamento
-        self.schedule_collection()
-        
-        # Loop principal
-        while True:
-            schedule.run_pending()
-            await asyncio.sleep(10)  # Verificar a cada 10 segundos
-    
-    def get_status(self) -> dict:
-        """Retorna status do agendador"""
-        return {
-            "is_running": self.is_running,
-            "last_successful_run": self.last_successful_run.isoformat() if self.last_successful_run else None,
-            "consecutive_failures": self.consecutive_failures,
-            "collection_interval_minutes": self.collection_interval,
-            "next_scheduled_run": self._get_next_run_time()
-        }
-    
-    def _get_next_run_time(self) -> Optional[str]:
-        """Calcula próximo horário de execução"""
-        now = datetime.now()
-        
-        if self.collection_interval == 30:
-            # Próximo horário: xx:00 ou xx:30
-            minutes = now.minute
-            if minutes < 30:
-                next_run = now.replace(minute=30, second=0, microsecond=0)
+        if "error" not in result:
+            # Salvar no banco
+            db = next(get_db())
+            saved = imperio_data_manager.save_collection_data(db, result)
+            db.close()
+            
+            if saved:
+                print("SUCESSO: Coleta automatica realizada com sucesso!")
+                print(f"   ROI: {result['totals']['roi']:.2f}")
+                print(f"   Vendas: R$ {result['totals']['sales']:,.2f}")
+                print(f"   Gastos: R$ {result['totals']['spend']:,.2f}")
+                print(f"   Orcamento: R$ {result['totals']['budget']:,.2f}")
+                logger.info(f"COLETA AUTOMATICA CONCLUIDA - ROI: {result['totals']['roi']:.2f}")
             else:
-                next_run = now.replace(hour=now.hour + 1, minute=0, second=0, microsecond=0)
+                print("ERRO: Coleta realizada mas erro ao salvar")
+                logger.error("Erro ao salvar dados da coleta automatica")
         else:
-            # Calcular baseado no intervalo
-            minutes_to_add = self.collection_interval - (now.minute % self.collection_interval)
-            next_run = now.replace(second=0, microsecond=0) + timedelta(minutes=minutes_to_add)
+            print(f"ERRO: Erro na coleta automatica: {result['error']}")
+            logger.error(f"Erro na coleta automatica: {result['error']}")
         
-        return next_run.isoformat()
+        print(f"Proxima coleta: {(datetime.now() + timedelta(minutes=30)).strftime('%H:%M:%S')}")
+        print(f"{'='*60}")
+            
+    except Exception as e:
+        logger.error(f"ERRO CRITICO na coleta agendada: {e}")
+        print(f"ERRO CRITICO na coleta automatica: {e}")
+        # Não deixar o scheduler quebrar por um erro
+        try:
+            # Tentar reagendar se houve erro
+            print("Tentando manter scheduler ativo...")
+        except:
+            pass
 
-# Instância global do agendador
-scheduler = DataScheduler()
+def init_scheduler():
+    """Inicializar scheduler com coleta a cada 30 minutos"""
+    try:
+        # Agendar coleta a cada 30 minutos
+        scheduler.add_job(
+            scheduled_collection,
+            IntervalTrigger(minutes=30),
+            id='coleta_30min',
+            name='Coleta automática a cada 30 minutos',
+            replace_existing=True,
+            next_run_time=datetime.now() + timedelta(minutes=30)  # Primeira execução em 30 min
+        )
+        
+        logger.info("Scheduler configurado: coleta a cada 30 minutos")
+        print("Coleta automatica configurada: a cada 30 minutos")
+        
+        # Mostrar próxima execução
+        job = scheduler.get_job('coleta_30min')
+        if job:
+            print(f"Proxima coleta agendada: {job.next_run_time.strftime('%d/%m/%Y %H:%M:%S')}")
+        
+        return True
+        
+    except Exception as e:
+        logger.error(f"Erro ao configurar scheduler: {e}")
+        print(f"Erro ao configurar coleta automatica: {e}")
+        return False
 
-async def start_scheduler():
-    """Inicia o agendador"""
-    await scheduler.run_scheduler()
-
-def get_scheduler_status():
-    """Obtém status do agendador"""
-    return scheduler.get_status()
+def get_scheduler_info():
+    """Obter informações do scheduler"""
+    try:
+        job = scheduler.get_job('coleta_30min')
+        if job:
+            return {
+                "active": True,
+                "interval_minutes": 30,
+                "next_run": job.next_run_time.isoformat() if job.next_run_time else None,
+                "job_name": job.name
+            }
+        else:
+            return {
+                "active": False,
+                "interval_minutes": 30,
+                "next_run": None,
+                "job_name": None
+            }
+    except Exception as e:
+        logger.error(f"Erro ao obter info do scheduler: {e}")
+        return {
+            "active": False,
+            "error": str(e)
+        }

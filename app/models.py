@@ -1,45 +1,129 @@
-from sqlalchemy import Column, Integer, Float, String, DateTime, Boolean
+from sqlalchemy import Column, Integer, Float, String, DateTime, Boolean, Text, Date
 from sqlalchemy.sql import func
 from .database import Base
 
-class ROIData(Base):
-    __tablename__ = "roi_data"
-
+class Campaign(Base):
+    """Campanha ativa - Sorteio 200mil"""
+    __tablename__ = "campaigns"
+    
     id = Column(Integer, primary_key=True, index=True)
-    timestamp = Column(DateTime, default=func.now())
-    page_type = Column(String, index=True)  # 'geral', 'instagram', 'grupo'
-    spend = Column(Float)
-    sales = Column(Float)
-    roi = Column(Float)
-    period = Column(String)  # 'hourly', 'daily'
+    product_id = Column(String, nullable=False, default="684c73283d75820c0a77a42f")
+    name = Column(String, nullable=False)
+    description = Column(Text)
+    roi_goal = Column(Float, default=2.0)
+    daily_budget = Column(Float, default=10000.0)
+    target_sales = Column(Float, default=30000.0)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=func.now())
 
-class SalesData(Base):
-    __tablename__ = "sales_data"
-
+class DailySnapshot(Base):
+    """Snapshot de dados do dia - dados cumulativos desde 00:00"""
+    __tablename__ = "daily_snapshots"
+    
     id = Column(Integer, primary_key=True, index=True)
-    timestamp = Column(DateTime, default=func.now())
-    date = Column(String)
-    total_orders = Column(Integer)
-    total_numbers = Column(Integer)
-    total_value = Column(Float)
+    date = Column(Date, nullable=False)
+    product_id = Column(String, nullable=False)
+    
+    # Dados de vendas (cumulativo do dia)
+    total_sales = Column(Float, default=0.0)
+    total_orders = Column(Integer, default=0)
+    total_numbers = Column(Integer, default=0)
+    
+    # Dados de gastos (cumulativo do dia)
+    total_spend = Column(Float, default=0.0)
+    total_budget = Column(Float, default=0.0)
+    
+    # ROI geral do dia
+    general_roi = Column(Float, default=0.0)
+    profit = Column(Float, default=0.0)
+    margin_percent = Column(Float, default=0.0)
+    
+    # Timestamp da coleta
+    collected_at = Column(DateTime, default=func.now())
 
-class AffiliateData(Base):
-    __tablename__ = "affiliate_data"
-
+class ChannelData(Base):
+    """Dados por canal (Geral, Instagram, Grupos)"""
+    __tablename__ = "channel_data"
+    
     id = Column(Integer, primary_key=True, index=True)
-    timestamp = Column(DateTime, default=func.now())
-    affiliate_code = Column(String, index=True)
+    date = Column(Date, nullable=False)
+    product_id = Column(String, nullable=False)
+    channel_name = Column(String, nullable=False)  # 'geral', 'instagram', 'grupos'
+    
+    # Dados do canal
+    sales = Column(Float, default=0.0)
+    spend = Column(Float, default=0.0)
+    roi = Column(Float, default=0.0)
+    profit = Column(Float, default=0.0)
+    margin_percent = Column(Float, default=0.0)
+    
+    # Timestamp da coleta
+    collected_at = Column(DateTime, default=func.now())
+
+class FacebookAccount(Base):
+    """Dados das contas do Facebook Ads"""
+    __tablename__ = "facebook_accounts"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    date = Column(Date, nullable=False)
+    account_id = Column(String, nullable=False)
+    spend = Column(Float, default=0.0)
+    api_version = Column(String)
+    channel = Column(String, default="geral")  # geral, instagram, grupos
+    collected_at = Column(DateTime, default=func.now())
+
+class AffiliateSnapshot(Base):
+    """Snapshot de dados de afiliados"""
+    __tablename__ = "affiliate_snapshots"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    date = Column(Date, nullable=False)
+    product_id = Column(String, nullable=False)
+    affiliate_code = Column(String, nullable=False)
     affiliate_name = Column(String)
-    total_paid_orders = Column(Float)
-    order_count = Column(Integer)
-    average_ticket = Column(Float)
+    
+    # Dados do afiliado
+    total_paid_orders = Column(Float, default=0.0)
+    order_count = Column(Integer, default=0)
+    average_ticket = Column(Float, default=0.0)
+    
+    # Classificação por canal
+    channel = Column(String)  # 'geral', 'instagram', 'grupos'
+    
+    collected_at = Column(DateTime, default=func.now())
 
-class FacebookAdsData(Base):
-    __tablename__ = "facebook_ads_data"
-
+class CollectionLog(Base):
+    """Log de coletas realizadas"""
+    __tablename__ = "collection_logs"
+    
     id = Column(Integer, primary_key=True, index=True)
-    timestamp = Column(DateTime, default=func.now())
-    account_id = Column(String, index=True)
-    spend = Column(Float)
-    impressions = Column(Integer, default=0)
-    clicks = Column(Integer, default=0)
+    date = Column(Date, nullable=False)
+    collection_time = Column(DateTime, default=func.now())
+    
+    # Status da coleta
+    status = Column(String, default="success")  # success, error, partial
+    
+    # Dados coletados
+    sales_collected = Column(Boolean, default=False)
+    affiliates_collected = Column(Boolean, default=False)
+    facebook_collected = Column(Boolean, default=False)
+    
+    # Resumo dos dados
+    total_sales = Column(Float, default=0.0)
+    total_spend = Column(Float, default=0.0)
+    general_roi = Column(Float, default=0.0)
+    
+    # Mensagens/erros
+    message = Column(Text)
+    error_details = Column(Text)
+
+class FacebookAccountMapping(Base):
+    """Mapeamento de contas Facebook por canal"""
+    __tablename__ = "facebook_account_mapping"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    account_id = Column(String, nullable=False)
+    channel = Column(String, nullable=False)  # geral, instagram, grupos
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())

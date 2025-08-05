@@ -417,21 +417,21 @@ def executar_rotina_completa_roi():
     # Definir estrutura de dados para evitar repetição
     configs = [
         {
-            'accounts': ['act_790223756353632', 'act_2067257390316380', 'act_406219475582745', 'act_1391112848236399'],
+            'accounts': ['act_790223756353632', 'act_772777644802886', 'act_2067257390316380', 'act_406219475582745', 'act_1391112848236399', 'act_303402486183447'],
             'scrap': 'SCRAP ROI POR HORÁRIO',
             'pagina': 'Página1',
             'hist': 'HISTÓRICO ROI',
             'hist_ultima': 'HISTÓRICO ROI última hora'
         },
         {
-            'accounts': ['act_790223756353632', 'act_2067257390316380', 'act_406219475582745', 'act_1391112848236399'],
+            'accounts': ['act_790223756353632', 'act_2067257390316380', 'act_406219475582745', 'act_1391112848236399', 'act_303402486183447'],
             'scrap': 'SCRAP ROI POR HORÁRIO 2',
             'pagina': 'Página2',
             'hist': 'HISTÓRICO ROI 2',
             'hist_ultima': 'HISTÓRICO ROI última hora 2'
         },
         {
-            'accounts': [],  # Lista vazia
+            'accounts': ['act_772777644802886'],  # Lista vazia
             'scrap': 'SCRAP ROI POR HORÁRIO 3',
             'pagina': 'Página3',
             'hist': 'HISTÓRICO ROI 3',

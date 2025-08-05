@@ -1,0 +1,207 @@
+{% extends "base_simple.html" %}
+
+{% block title %}Dashboard ROI - Monitoramento Horário{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h2 mb-3">Monitoramento Horário - ROI em Tempo Real</h1>
+            <p class="text-muted">Análise detalhada como no Looker Studio com dados por intervalo e acumulados do dia.</p>
+        </div>
+    </div>
+
+    <!-- Campaign Info -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-success border-0 shadow-sm" role="alert">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-bullhorn fa-2x text-warning"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h5 class="alert-heading mb-1">Sorteio 200mil - Ação Atual</h5>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <small><strong>Meta ROI:</strong> 2.0x</small>
+                            </div>
+                            <div class="col-md-3">
+                                <small><strong>Orçamento:</strong> R$ 10.000/dia</small>
+                            </div>
+                            <div class="col-md-3">
+                                <small><strong>Meta Vendas:</strong> R$ 30.000/dia</small>
+                            </div>
+                            <div class="col-md-3">
+                                <small><strong>Status:</strong> <span class="badge bg-success">Ativo</span></small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <button class="btn btn-primary btn-sm">
+                            <i class="fas fa-cog me-1"></i>Configurar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ROI Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card metric-card text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-percentage fa-2x mb-2"></i>
+                    <div class="metric-value" id="roi-dia">0.00</div>
+                    <small>ROI do Dia</small>
+                    <div class="small">Meta: 2.00</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card metric-card text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-shopping-cart fa-2x mb-2"></i>
+                    <div class="metric-value" id="vendas-dia">R$ 0</div>
+                    <small>Vendas do Dia</small>
+                    <div class="small">Última hora: R$ 0</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card metric-card text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-dollar-sign fa-2x mb-2"></i>
+                    <div class="metric-value" id="gasto-dia">R$ 0</div>
+                    <small>Gasto do Dia</small>
+                    <div class="small">Orçamento: R$ 10.000</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card metric-card text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-chart-line fa-2x mb-2"></i>
+                    <div class="metric-value" id="lucro-dia">0%</div>
+                    <small>Lucro do Dia</small>
+                    <div class="small">Margem: 0%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hourly Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clock me-2"></i>Histórico Horário das Últimas 24h
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Período</th>
+                                    <th>Valor Usado (Intervalo)</th>
+                                    <th>Vendas (Intervalo)</th>
+                                    <th>ROI (Intervalo)</th>
+                                    <th>Gasto Acumulado (Dia)</th>
+                                    <th>Vendas Acumuladas (Dia)</th>
+                                    <th>ROI do Dia</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="text-muted" colspan="8">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        Sistema iniciado com dados limpos. Aguardando coleta de dados horária.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart Area -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-area me-2"></i>Evolução do ROI (Últimas 12h)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center p-5">
+                        <i class="fas fa-chart-line fa-4x text-muted mb-3"></i>
+                        <h5 class="text-muted">Gráfico será exibido após coleta de dados</h5>
+                        <p class="text-muted">Sistema configurado para monitoramento horário como no Looker Studio</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Função para carregar dados do monitoramento horário
+async function loadHourlyData() {
+    try {
+        const response = await fetch('/api/dashboard/summary');
+        if (!response.ok) {
+            console.log('API não disponível, usando dados estáticos');
+            return;
+        }
+        
+        const data = await response.json();
+        console.log('Dados hourly carregados:', data);
+        
+        // Atualizar elementos com IDs específicos
+        const roiDia = document.getElementById('roi-dia');
+        if (roiDia && data.current_roi !== undefined) {
+            roiDia.textContent = data.current_roi.toFixed(2);
+        }
+        
+        const vendasDia = document.getElementById('vendas-dia');
+        if (vendasDia && data.today_sales !== undefined) {
+            vendasDia.textContent = 'R$ ' + data.today_sales.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+        }
+        
+        const gastoDia = document.getElementById('gasto-dia');
+        if (gastoDia && data.today_spend !== undefined) {
+            gastoDia.textContent = 'R$ ' + data.today_spend.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+        }
+        
+        const lucroDia = document.getElementById('lucro-dia');
+        if (lucroDia && data.profit_margin !== undefined) {
+            lucroDia.textContent = data.profit_margin.toFixed(1) + '%';
+        }
+        
+        // Mostrar status de que dados foram carregados
+        const statusElement = document.querySelector('.text-muted');
+        if (statusElement && data.current_roi !== undefined) {
+            statusElement.innerHTML = `<i class="fas fa-check-circle me-2"></i>Sistema funcionando! ROI atual: ${data.current_roi.toFixed(2)}x - Dados atualizados em tempo real`;
+        }
+        
+    } catch (error) {
+        console.log('Erro ao carregar dados hourly (normal se API não estiver pronta):', error);
+    }
+}
+
+// Carregar dados quando página estiver pronta
+document.addEventListener('DOMContentLoaded', function() {
+    // Aguardar um pouco para servidor estar pronto
+    setTimeout(loadHourlyData, 2000);
+    
+    // Tentar atualizar dados a cada 30 segundos
+    setInterval(loadHourlyData, 30000);
+});
+</script>
+{% endblock %}
