@@ -38,6 +38,23 @@ app.mount("/static", StaticFiles(directory=static_dir), name="static")
 # Incluir routers da API
 app.include_router(api_router, prefix="/api", tags=["api"])
 
+# Rota de health check
+@app.get("/health")
+async def health_check():
+    """Health check para monitoramento do Railway"""
+    return {
+        "status": "healthy",
+        "service": "Sistema ROI Império",
+        "timestamp": datetime.now().isoformat(),
+        "version": "1.0.0"
+    }
+
+# Rota catch-all para webhooks não mapeados (evitar 404s)
+@app.post("/api/webhook/{webhook_path:path}")
+async def catch_all_webhook(webhook_path: str):
+    """Capturar todos os webhooks não mapeados para evitar 404s"""
+    return {"status": "ok", "message": f"Webhook {webhook_path} recebido", "timestamp": datetime.now().isoformat()}
+
 @app.on_event("startup")
 async def startup_event():
     """Executar na inicialização"""

@@ -8,6 +8,25 @@ from .core.data_manager import imperio_data_manager
 
 router = APIRouter()
 
+# Rotas de webhook para evitar 404s
+@router.post("/webhook/button-click")
+async def handle_button_click_webhook():
+    """Webhook para cliques de botão - endpoint dummy para evitar 404s"""
+    print(f"[WEBHOOK] button-click recebido às {datetime.now()}")
+    return {"status": "ok", "message": "Webhook button-click recebido"}
+
+@router.post("/webhook/temp-order-expired")
+async def handle_temp_order_expired_webhook():
+    """Webhook para pedidos temporários expirados - endpoint dummy para evitar 404s"""
+    print(f"[WEBHOOK] temp-order-expired recebido às {datetime.now()}")
+    return {"status": "ok", "message": "Webhook temp-order-expired recebido"}
+
+@router.post("/webhook/temp-order-paid")
+async def handle_temp_order_paid_webhook():
+    """Webhook para pedidos temporários pagos - endpoint dummy para evitar 404s"""
+    print(f"[WEBHOOK] temp-order-paid recebido às {datetime.now()}")
+    return {"status": "ok", "message": "Webhook temp-order-paid recebido"}
+
 @router.get("/dashboard/summary")
 async def get_dashboard_summary(db: Session = Depends(get_db)):
     """Obter resumo do dashboard - dados CUMULATIVOS de hoje"""
