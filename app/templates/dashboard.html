@@ -32,6 +32,30 @@
         .badge-success { background-color: #28a745; }
         .badge-warning { background-color: #ffc107; }
         .badge-danger { background-color: #dc3545; }
+        
+        @keyframes pulse {
+            0% {
+                transform: translateY(-50%) scale(1);
+                box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4);
+            }
+            50% {
+                transform: translateY(-50%) scale(1.05);
+                box-shadow: 0 0 0 5px rgba(255, 255, 255, 0);
+            }
+            100% {
+                transform: translateY(-50%) scale(1);
+                box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+            }
+        }
+        
+        .budget-badge .badge {
+            transition: all 0.3s ease;
+        }
+        
+        .budget-badge .badge:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
     </style>
 </head>
 <body>
@@ -185,8 +209,13 @@
         <div class="row mb-4">
             <div class="col-lg-4 mb-3">
                 <div class="card">
-                    <div class="card-header bg-primary text-white">
+                    <div class="card-header bg-primary text-white position-relative overflow-hidden">
                         <h6 class="mb-0"><i class="fas fa-globe me-1"></i>Canal Geral</h6>
+                        <div class="budget-badge position-absolute" style="top: 50%; right: 10px; transform: translateY(-50%);">
+                            <span class="badge bg-light text-primary" style="font-size: 0.75rem; animation: pulse 2s infinite;">
+                                <i class="fas fa-wallet me-1"></i>Orçamento: <span id="budget-geral">R$ 0</span>
+                            </span>
+                        </div>
                     </div>
                     <div class="card-body text-center">
                         <div class="h4 text-primary" id="roi-geral-channel">0.00</div>
@@ -206,8 +235,13 @@
             </div>
             <div class="col-lg-4 mb-3">
                 <div class="card">
-                    <div class="card-header bg-success text-white">
+                    <div class="card-header bg-success text-white position-relative overflow-hidden">
                         <h6 class="mb-0"><i class="fab fa-instagram me-1"></i>Instagram</h6>
+                        <div class="budget-badge position-absolute" style="top: 50%; right: 10px; transform: translateY(-50%);">
+                            <span class="badge bg-light text-success" style="font-size: 0.75rem; animation: pulse 2s infinite;">
+                                <i class="fas fa-wallet me-1"></i>Orçamento: <span id="budget-instagram">R$ 0</span>
+                            </span>
+                        </div>
                     </div>
                     <div class="card-body text-center">
                         <div class="h4 text-success" id="roi-instagram-channel">0.00</div>
@@ -227,8 +261,13 @@
             </div>
             <div class="col-lg-4 mb-3">
                 <div class="card">
-                    <div class="card-header bg-warning text-white">
+                    <div class="card-header bg-warning text-white position-relative overflow-hidden">
                         <h6 class="mb-0"><i class="fab fa-whatsapp me-1"></i>Grupos</h6>
+                        <div class="budget-badge position-absolute" style="top: 50%; right: 10px; transform: translateY(-50%);">
+                            <span class="badge bg-light text-warning" style="font-size: 0.75rem; animation: pulse 2s infinite;">
+                                <i class="fas fa-wallet me-1"></i>Orçamento: <span id="budget-grupos">R$ 0</span>
+                            </span>
+                        </div>
                     </div>
                     <div class="card-body text-center">
                         <div class="h4 text-warning" id="roi-grupos-channel">0.00</div>
@@ -319,11 +358,17 @@
             const channelNames = ['geral', 'instagram', 'grupos'];
             
             channelNames.forEach(channel => {
-                const channelData = channels[channel] || {sales: 0, spend: 0, roi: 0};
+                const channelData = channels[channel] || {sales: 0, spend: 0, roi: 0, budget: 0};
                 
                 document.getElementById(`roi-${channel}-channel`).textContent = channelData.roi.toFixed(2);
                 document.getElementById(`vendas-${channel}`).textContent = 'R$ ' + channelData.sales.toLocaleString('pt-BR', {minimumFractionDigits: 2});
                 document.getElementById(`gastos-${channel}`).textContent = 'R$ ' + channelData.spend.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+                
+                // Atualizar orçamento do canal
+                const budgetElement = document.getElementById(`budget-${channel}`);
+                if (budgetElement) {
+                    budgetElement.textContent = 'R$ ' + channelData.budget.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+                }
             });
         }
 

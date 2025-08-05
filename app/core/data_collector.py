@@ -690,6 +690,12 @@ class ImperioDataCollector:
                 "grupos": 0.0
             }
             
+            # Adicionar orçamento por canal
+            budget_by_channel = {
+                "instagram": 0.0,
+                "grupos": 0.0
+            }
+            
             # Obter total de gastos e orçamentos do Facebook
             total_facebook_spend = 0.0
             total_facebook_budget = 0.0
@@ -710,6 +716,7 @@ class ImperioDataCollector:
                             for channel, accounts in channel_mapping.items():
                                 if account_id in accounts:
                                     spend_by_channel[channel] += spend
+                                    budget_by_channel[channel] += budget
                                     channel_found = True
                                     logger.info(f"{account_id} -> {channel}: R$ {spend:.2f}")
                                     break
@@ -717,6 +724,7 @@ class ImperioDataCollector:
                             # Se não encontrou mapeamento, colocar no Instagram (canal principal)
                             if not channel_found:
                                 spend_by_channel["instagram"] += spend
+                                budget_by_channel["instagram"] += budget
                                 logger.warning(f"{account_id} não mapeado, adicionado ao Instagram: R$ {spend:.2f}")
                         else:
                             logger.warning(f"Dados de conta inválidos para {account_id}: {account_data}")
@@ -734,6 +742,7 @@ class ImperioDataCollector:
                             for channel, accounts in channel_mapping.items():
                                 if account_id in accounts:
                                     spend_by_channel[channel] += spend
+                                    budget_by_channel[channel] += budget
                                     channel_found = True
                                     logger.info(f"{account_id} -> {channel}: R$ {spend:.2f}")
                                     break
@@ -741,6 +750,7 @@ class ImperioDataCollector:
                             # Se não encontrou mapeamento, colocar no Instagram (canal principal)
                             if not channel_found:
                                 spend_by_channel["instagram"] += spend
+                                budget_by_channel["instagram"] += budget
                                 logger.warning(f"{account_id} não mapeado, adicionado ao Instagram: R$ {spend:.2f}")
                         else:
                             logger.warning(f"Dados de conta inválidos: {account_data}")
@@ -826,6 +836,7 @@ class ImperioDataCollector:
                 roi_by_channel[channel] = {
                     "sales": sales,
                     "spend": channel_spend,
+                    "budget": budget_by_channel[channel],
                     "roi": roi,
                     "profit": sales - channel_spend,
                     "margin": ((sales - channel_spend) / sales * 100) if sales > 0 else 0
@@ -845,6 +856,7 @@ class ImperioDataCollector:
             roi_by_channel["geral"] = {
                 "sales": geral_sales,
                 "spend": geral_spend,
+                "budget": total_facebook_budget,
                 "roi": geral_roi,
                 "profit": geral_profit,
                 "margin": ((geral_profit) / geral_sales * 100) if geral_sales > 0 else 0
