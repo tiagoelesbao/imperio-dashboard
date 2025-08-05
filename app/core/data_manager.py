@@ -90,6 +90,7 @@ class ImperioDataManager:
                 # Atualizar
                 existing.sales = channel_data.get("sales", 0.0)
                 existing.spend = channel_data.get("spend", 0.0)
+                existing.budget = channel_data.get("budget", 0.0)
                 existing.roi = channel_data.get("roi", 0.0)
                 existing.profit = channel_data.get("profit", 0.0)
                 existing.margin_percent = channel_data.get("margin", 0.0)
@@ -102,6 +103,7 @@ class ImperioDataManager:
                     channel_name=channel_name,
                     sales=channel_data.get("sales", 0.0),
                     spend=channel_data.get("spend", 0.0),
+                    budget=channel_data.get("budget", 0.0),
                     roi=channel_data.get("roi", 0.0),
                     profit=channel_data.get("profit", 0.0),
                     margin_percent=channel_data.get("margin", 0.0),
@@ -152,6 +154,7 @@ class ImperioDataManager:
                     channels_data[channel.channel_name] = {
                         "sales": channel.sales,
                         "spend": channel.spend,
+                        "budget": channel.budget,
                         "roi": channel.roi,
                         "profit": channel.profit,
                         "margin": channel.margin_percent

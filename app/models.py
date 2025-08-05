@@ -53,6 +53,7 @@ class ChannelData(Base):
     # Dados do canal
     sales = Column(Float, default=0.0)
     spend = Column(Float, default=0.0)
+    budget = Column(Float, default=0.0)
     roi = Column(Float, default=0.0)
     profit = Column(Float, default=0.0)
     margin_percent = Column(Float, default=0.0)
