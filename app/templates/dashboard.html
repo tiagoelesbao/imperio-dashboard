@@ -35,26 +35,56 @@
         
         @keyframes pulse {
             0% {
-                transform: translateY(-50%) scale(1);
+                transform: scale(1);
                 box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4);
             }
             50% {
-                transform: translateY(-50%) scale(1.05);
+                transform: scale(1.05);
                 box-shadow: 0 0 0 5px rgba(255, 255, 255, 0);
             }
             100% {
-                transform: translateY(-50%) scale(1);
+                transform: scale(1);
                 box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
             }
         }
         
         .budget-badge .badge {
             transition: all 0.3s ease;
+            border-radius: 12px;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         
         .budget-badge .badge:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+            animation-play-state: paused;
+        }
+        
+        .card-header h6 i {
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        
+        .card-header {
+            padding: 0.75rem 1rem;
+            min-height: 3rem;
+            border-bottom: 2px solid rgba(255,255,255,0.1);
+        }
+        
+        /* Melhorias específicas para cada canal */
+        .bg-primary { background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important; }
+        .bg-success { background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%) !important; }
+        .bg-warning { background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%) !important; }
+        
+        /* Responsividade para badges */
+        @media (max-width: 768px) {
+            .budget-badge .badge {
+                font-size: 0.6rem !important;
+                padding: 2px 6px !important;
+            }
+            .card-header h6 {
+                font-size: 0.9rem;
+            }
         }
     </style>
 </head>
@@ -209,11 +239,14 @@
         <div class="row mb-4">
             <div class="col-lg-4 mb-3">
                 <div class="card">
-                    <div class="card-header bg-primary text-white position-relative overflow-hidden">
-                        <h6 class="mb-0"><i class="fas fa-globe me-1"></i>Canal Geral</h6>
-                        <div class="budget-badge position-absolute" style="top: 50%; right: 10px; transform: translateY(-50%);">
-                            <span class="badge bg-light text-primary" style="font-size: 0.75rem; animation: pulse 2s infinite;">
-                                <i class="fas fa-wallet me-1"></i>Orçamento: <span id="budget-geral">R$ 0</span>
+                    <div class="card-header bg-primary text-white position-relative overflow-hidden d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 d-flex align-items-center">
+                            <i class="fas fa-globe me-2" style="font-size: 1.1rem;"></i>Canal Geral
+                        </h6>
+                        <div class="budget-badge">
+                            <span class="badge bg-light text-primary d-flex align-items-center" style="font-size: 0.7rem; animation: pulse 2s infinite; padding: 4px 8px;">
+                                <i class="fas fa-wallet me-1" style="font-size: 0.8rem;"></i>
+                                <span style="font-weight: 600;">R$ <span id="budget-geral">0</span></span>
                             </span>
                         </div>
                     </div>
@@ -235,11 +268,14 @@
             </div>
             <div class="col-lg-4 mb-3">
                 <div class="card">
-                    <div class="card-header bg-success text-white position-relative overflow-hidden">
-                        <h6 class="mb-0"><i class="fab fa-instagram me-1"></i>Instagram</h6>
-                        <div class="budget-badge position-absolute" style="top: 50%; right: 10px; transform: translateY(-50%);">
-                            <span class="badge bg-light text-success" style="font-size: 0.75rem; animation: pulse 2s infinite;">
-                                <i class="fas fa-wallet me-1"></i>Orçamento: <span id="budget-instagram">R$ 0</span>
+                    <div class="card-header bg-success text-white position-relative overflow-hidden d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 d-flex align-items-center">
+                            <i class="fab fa-instagram me-2" style="font-size: 1.1rem;"></i>Instagram
+                        </h6>
+                        <div class="budget-badge">
+                            <span class="badge bg-light text-success d-flex align-items-center" style="font-size: 0.7rem; animation: pulse 2s infinite; padding: 4px 8px;">
+                                <i class="fas fa-wallet me-1" style="font-size: 0.8rem;"></i>
+                                <span style="font-weight: 600;">R$ <span id="budget-instagram">0</span></span>
                             </span>
                         </div>
                     </div>
@@ -261,11 +297,14 @@
             </div>
             <div class="col-lg-4 mb-3">
                 <div class="card">
-                    <div class="card-header bg-warning text-white position-relative overflow-hidden">
-                        <h6 class="mb-0"><i class="fab fa-whatsapp me-1"></i>Grupos</h6>
-                        <div class="budget-badge position-absolute" style="top: 50%; right: 10px; transform: translateY(-50%);">
-                            <span class="badge bg-light text-warning" style="font-size: 0.75rem; animation: pulse 2s infinite;">
-                                <i class="fas fa-wallet me-1"></i>Orçamento: <span id="budget-grupos">R$ 0</span>
+                    <div class="card-header bg-warning text-white position-relative overflow-hidden d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 d-flex align-items-center">
+                            <i class="fab fa-whatsapp me-2" style="font-size: 1.1rem;"></i>Grupos
+                        </h6>
+                        <div class="budget-badge">
+                            <span class="badge bg-light text-warning d-flex align-items-center" style="font-size: 0.7rem; animation: pulse 2s infinite; padding: 4px 8px;">
+                                <i class="fas fa-wallet me-1" style="font-size: 0.8rem;"></i>
+                                <span style="font-weight: 600;">R$ <span id="budget-grupos">0</span></span>
                             </span>
                         </div>
                     </div>
@@ -367,7 +406,7 @@
                 // Atualizar orçamento do canal
                 const budgetElement = document.getElementById(`budget-${channel}`);
                 if (budgetElement) {
-                    budgetElement.textContent = 'R$ ' + channelData.budget.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+                    budgetElement.textContent = channelData.budget.toLocaleString('pt-BR', {minimumFractionDigits: 2});
                 }
             });
         }
