@@ -1,0 +1,2219 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Imperio - Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --sidebar-width: 250px;
+            --sidebar-collapsed: 70px;
+            --primary-color: #1a1a2e;
+            --secondary-color: #16213e;
+            --accent-color: #ffd700;
+            --success-color: #00d25b;
+            --danger-color: #fc424a;
+            --text-primary: #ffffff;
+            --text-secondary: #8f9397;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styles - Looker Style */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            width: 180px;
+            background: #2d2d2d;
+            z-index: 1000;
+            border-right: 1px solid #404040;
+        }
+
+        .sidebar.collapsed {
+            width: 180px;
+        }
+
+        .sidebar-header {
+            padding: 20px 0;
+            background: #2d2d2d;
+        }
+        
+        .sidebar-title {
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            padding: 0 15px;
+            letter-spacing: 0.5px;
+        }
+
+        .sidebar-menu {
+            padding: 0;
+        }
+
+        .menu-item {
+            display: block;
+            padding: 10px 15px;
+            color: #b0b0b0;
+            font-size: 12px;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            font-weight: 500;
+            text-decoration: none;
+        }
+
+        .menu-item:hover {
+            background: rgba(255,255,255,0.05);
+            color: #ffffff;
+        }
+
+        .menu-item.active {
+            background: rgba(66, 133, 244, 0.1);
+            color: #4285f4;
+            border-left-color: #4285f4;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 180px;
+            padding: 0;
+            min-height: 100vh;
+        }
+        
+        .main-content.table-mode {
+            padding: 0;
+        }
+        
+        .main-content.table-mode .page-header {
+            display: none;
+        }
+
+        /* Header */
+        .page-header {
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--accent-color);
+            margin-bottom: 10px;
+        }
+
+        .page-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* KPI Cards */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .kpi-card {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .kpi-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .kpi-title {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .kpi-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .kpi-icon.success {
+            background: rgba(0,210,91,0.2);
+            color: var(--success-color);
+        }
+
+        .kpi-icon.danger {
+            background: rgba(252,66,74,0.2);
+            color: var(--danger-color);
+        }
+
+        .kpi-icon.warning {
+            background: rgba(255,215,0,0.2);
+            color: var(--accent-color);
+        }
+
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .kpi-change {
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .kpi-change.positive {
+            color: var(--success-color);
+        }
+
+        .kpi-change.negative {
+            color: var(--danger-color);
+        }
+
+        /* Two Column Tables Layout - Looker Style */
+        .tables-container {
+            display: flex;
+            height: 100vh;
+            background: #1a1a1a;
+            gap: 1px;
+            margin: 0;
+            padding: 0;
+        }
+        
+        #twoColumnView {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .table-column {
+            flex: 1;
+            background: #1a1a1a;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .table-column:first-child {
+            border-right: 1px solid #313131;
+        }
+        
+        .table-header {
+            background: #333333;
+            padding: 15px 20px;
+            border-bottom: 1px solid #404040;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .header-left {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .date-filter {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-left: 15px;
+        }
+        
+        .date-input {
+            background: #2d2d2d;
+            border: 1px solid #404040;
+            color: #ffffff;
+            padding: 6px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            width: 130px;
+        }
+        
+        .date-input:focus {
+            outline: none;
+            border-color: #4285f4;
+        }
+        
+        .filter-btn {
+            background: #4285f4;
+            border: none;
+            color: #ffffff;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        
+        .filter-btn:hover {
+            background: #3367d6;
+        }
+        
+        .table-header h3 {
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+        
+        .table-subtitle {
+            font-size: 10px;
+            color: #9aa0a6;
+            font-weight: 400;
+        }
+        
+        .table-wrapper {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        /* Data Tables */
+        .data-table-container {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            overflow-x: auto;
+        }
+
+        .table-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10px;
+        }
+
+        .data-table thead {
+            background: #333333;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .data-table th {
+            padding: 10px 8px;
+            text-align: left;
+            font-weight: 500;
+            color: #e8eaed;
+            border-bottom: 1px solid #404040;
+            font-size: 10px;
+        }
+
+        .data-table td {
+            padding: 8px 8px;
+            border-bottom: 1px solid #2d2d2d;
+            color: #e8eaed;
+            font-size: 10px;
+            white-space: nowrap;
+        }
+
+        .data-table tbody tr:nth-child(even) {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .data-table tbody tr:hover {
+            background: rgba(66, 133, 244, 0.05);
+        }
+        
+        .loading-cell {
+            text-align: center;
+            padding: 40px !important;
+            color: #9aa0a6;
+            font-style: italic;
+        }
+        
+        .currency {
+            text-align: right;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+            font-size: 10px;
+        }
+        
+        .datetime {
+            color: #9aa0a6;
+            font-size: 9px;
+            font-family: 'SF Mono', 'Monaco', monospace;
+        }
+        
+        .roi-excellent { 
+            color: #34a853; 
+            font-weight: 600;
+            background: rgba(52, 168, 83, 0.1);
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        
+        .roi-good { 
+            color: #fbbc04; 
+            font-weight: 600;
+            background: rgba(251, 188, 4, 0.1);
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        
+        .roi-attention { 
+            color: #ea4335; 
+            font-weight: 600;
+            background: rgba(234, 67, 53, 0.1);
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 4px;
+        }
+
+        .status-excellent { background-color: #34a853; }
+        .status-good { background-color: #fbbc04; }
+        .status-attention { background-color: #ea4335; }
+
+        .roi-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .roi-badge.high {
+            background: rgba(0,210,91,0.2);
+            color: var(--success-color);
+        }
+
+        .roi-badge.medium {
+            background: rgba(255,215,0,0.2);
+            color: var(--accent-color);
+        }
+
+        .roi-badge.low {
+            background: rgba(252,66,74,0.2);
+            color: var(--danger-color);
+        }
+
+        /* Charts Container */
+        .chart-container {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .chart-header {
+            margin-bottom: 20px;
+        }
+
+        .chart-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        /* Loading State */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top-color: var(--accent-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Dashboard de Orçamento Styles */
+        #orcamentoDashboard {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .dashboard-header h2 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+        }
+
+        .metric-value {
+            font-size: 2.2rem;
+            font-weight: bold;
+            margin: 8px 0;
+        }
+
+        .dashboard-card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .card-title {
+            color: var(--accent-color);
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .status-item i {
+            margin-right: 8px;
+            width: 16px;
+        }
+
+        .text-success { color: #28a745 !important; }
+        .text-warning { color: #ffc107 !important; }
+        .text-info { color: #17a2b8 !important; }
+
+        /* CORREÇÃO FINAL DAS TABELAS - ALINHAMENTO PERFEITO */
+        .data-table td:nth-child(1) { 
+            width: 35% !important; 
+            text-align: left !important; 
+            padding: 10px !important; 
+        }
+        .data-table td:nth-child(2) { 
+            width: 18% !important; 
+            text-align: center !important; 
+            padding: 10px !important; 
+            color: #FFD700 !important;
+            font-weight: bold !important;
+        }
+        .data-table td:nth-child(3) { 
+            width: 18% !important; 
+            text-align: center !important; 
+            padding: 10px !important; 
+            color: #FFD700 !important;
+            font-weight: bold !important;
+        }
+        .data-table td:nth-child(4) { 
+            width: 19% !important; 
+            text-align: center !important; 
+            padding: 10px !important; 
+        }
+        .data-table td:nth-child(5) { 
+            width: 10% !important; 
+            text-align: center !important; 
+            padding: 10px !important; 
+        }
+
+        /* Efeitos do Logo Império */
+        #imperio-logo:hover {
+            transform: scale(1.05);
+            filter: brightness(1.1);
+            cursor: default;
+        }
+
+        /* Efeito hover OracleSys discreto */
+        .sidebar div a[href="/oraclesys"]:hover {
+            color: rgba(255,215,0,0.9) !important;
+            transform: translateY(-1px);
+        }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div style="text-align: center; padding: 20px 0;">
+                <img src="/static/logo.png" alt="Império Logo" id="imperio-logo" style="max-width: 120px; height: auto; transition: all 0.3s ease;">
+            </div>
+        </div>
+        <div class="sidebar-menu">
+            <a href="#orcamento" class="menu-item active" data-view="orcamento">Orçamento Atual</a>
+            <a href="#geral" class="menu-item" data-view="geral">ROI (Geral)</a>
+            <a href="#perfil" class="menu-item" data-view="perfil">ROI (Perfil)</a>
+            <a href="#grupos" class="menu-item" data-view="grupos">ROI (Grupo)</a>
+            <a href="#horapix" class="menu-item" data-view="horapix">
+                <i class="fas fa-clock" style="margin-right: 8px;"></i>Hora do Pix
+            </a>
+        </div>
+        
+        <!-- Rodapé com link OracleSys discreto -->
+        <div style="position: absolute; bottom: 15px; left: 0; right: 0; text-align: center;">
+            <a href="/oraclesys" target="_blank" style="color: rgba(255,215,0,0.6); text-decoration: none; font-size: 0.75rem; transition: color 0.3s ease;">
+                <i class="fas fa-crown" style="font-size: 0.7rem; margin-right: 3px;"></i>
+                <span>OracleSys</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+
+        <!-- Content Container -->
+        <div id="contentContainer">
+            <!-- Dashboard de Orçamento EXATO da Screenshot -->
+            <div id="orcamentoDashboard" style="display: block;">
+                <!-- Header da Página com Controles -->
+                <div class="page-header" style="background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%); padding: 20px; border-radius: 15px; margin-bottom: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 style="color: white; margin-bottom: 5px; font-weight: 600;">
+                                <i class="fas fa-calendar-check"></i> Monitoramento Diário
+                            </h2>
+                            <div style="color: rgba(255,255,255,0.8); margin-bottom: 0; font-size: 0.9rem; display: flex; align-items: center; gap: 10px;">
+                                <i class="fas fa-database"></i> 
+                                <span>Produto ID:</span>
+                                <input type="text" id="productIdInput" value="68e7dc390d0e097d616ae52d" 
+                                       placeholder="Digite o ID do produto..." 
+                                       style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.85rem; width: 300px; font-family: monospace;">
+                                <button onclick="changeProduct()" style="background: #28a745; border: 1px solid #28a745; color: white; padding: 4px 12px; border-radius: 4px; font-size: 0.8rem; cursor: pointer; font-weight: bold;">
+                                    <i class="fas fa-save"></i> Salvar
+                                </button>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="btn-group">
+                                <button class="btn btn-light" onclick="executeCollectionNow()" id="coletarAgoraBtn">
+                                    <i class="fas fa-sync"></i> Coletar Agora
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Status Line -->
+                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.2);">
+                        <div class="d-flex align-items-center text-white">
+                            <div class="status-indicator" style="width: 10px; height: 10px; background: #00ff00; border-radius: 50%; margin-right: 10px; animation: pulse 2s infinite;"></div>
+                            <span><strong>Status:</strong> Sistema Ativo</span>
+                            <span style="margin-left: 20px;" id="lastCollectionInfo">Última coleta: --</span>
+                            <span style="margin-left: 20px;" id="collectionsToday">Coletas hoje: 0</span>
+                            <span style="margin-left: 20px;" id="calculationPeriod">Dados cumulativos de hoje (00:00 até agora)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cards Principais (4 cards como na screenshot) -->
+                <div class="row g-3 mb-4">
+                    <!-- ROI Card -->
+                    <div class="col-lg-3 col-md-6">
+                        <div style="background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%); border-radius: 15px; padding: 25px; color: white; box-shadow: 0 8px 25px rgba(155,89,182,0.3); position: relative; overflow: hidden;">
+                            <div style="position: absolute; top: -10px; right: -10px; font-size: 4rem; opacity: 0.1;">
+                                <i class="fas fa-percentage"></i>
+                            </div>
+                            <div style="position: relative; z-index: 2;">
+                                <div style="font-size: 3rem; font-weight: bold; margin: 10px 0;" id="roiGeral">--</div>
+                                <div style="font-size: 0.9rem; opacity: 0.9;">ROI Geral</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Vendas Card -->
+                    <div class="col-lg-3 col-md-6">
+                        <div style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); border-radius: 15px; padding: 25px; color: white; box-shadow: 0 8px 25px rgba(52,152,219,0.3); position: relative; overflow: hidden;">
+                            <div style="position: absolute; top: -10px; right: -10px; font-size: 4rem; opacity: 0.1;">
+                                <i class="fas fa-shopping-cart"></i>
+                            </div>
+                            <div style="position: relative; z-index: 2;">
+                                <div style="font-size: 2.2rem; font-weight: bold; margin: 10px 0;" id="vendasHoje">R$ --</div>
+                                <div style="font-size: 0.9rem; opacity: 0.9;">Vendas Hoje</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Gastos Card -->
+                    <div class="col-lg-3 col-md-6">
+                        <div style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); border-radius: 15px; padding: 25px; color: white; box-shadow: 0 8px 25px rgba(231,76,60,0.3); position: relative; overflow: hidden;">
+                            <div style="position: absolute; top: -10px; right: -10px; font-size: 4rem; opacity: 0.1;">
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
+                            <div style="position: relative; z-index: 2;">
+                                <div style="font-size: 2.2rem; font-weight: bold; margin: 10px 0;" id="gastosHoje">R$ --</div>
+                                <div style="font-size: 0.9rem; opacity: 0.9;">Gastos Hoje</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Lucro Card -->
+                    <div class="col-lg-3 col-md-6">
+                        <div style="background: linear-gradient(135deg, #27ae60 0%, #229954 100%); border-radius: 15px; padding: 25px; color: white; box-shadow: 0 8px 25px rgba(39,174,96,0.3); position: relative; overflow: hidden;">
+                            <div style="position: absolute; top: -10px; right: -10px; font-size: 4rem; opacity: 0.1;">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div style="position: relative; z-index: 2;">
+                                <div style="font-size: 2.2rem; font-weight: bold; margin: 10px 0;" id="lucroHoje">R$ --</div>
+                                <div style="font-size: 0.9rem; opacity: 0.9;">Lucro Hoje</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cards de Canais (3 cards como na screenshot) -->
+                <div class="row g-3 mb-4">
+                    <!-- Canal Geral -->
+                    <div class="col-md-4">
+                        <div style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); border-radius: 12px; padding: 20px; color: white; position: relative;">
+                            <div style="position: absolute; top: 10px; right: 15px; background: rgba(255,255,255,0.2); padding: 3px 8px; border-radius: 10px; font-size: 0.7rem;" id="orcamentoGeral">
+                                R$ --
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <i class="fas fa-globe" style="margin-right: 8px;"></i>
+                                <strong>Canal Geral</strong>
+                            </div>
+                            <div style="text-align: center; margin: 20px 0;">
+                                <div style="font-size: 2.5rem; font-weight: bold;" id="roiGeral2">--</div>
+                                <div style="font-size: 0.9rem; opacity: 0.9;">ROI do Canal</div>
+                            </div>
+                            <div style="display: flex; justify-content: space-around; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 15px;">
+                                <div style="text-align: center;">
+                                    <div style="font-size: 0.8rem; opacity: 0.8;">Vendas</div>
+                                    <div style="font-weight: bold;" id="vendasGeral">R$ --</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 0.8rem; opacity: 0.8;">Gastos</div>
+                                    <div style="font-weight: bold;" id="gastosGeral">R$ --</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 0.8rem; opacity: 0.8;">Lucro</div>
+                                    <div style="font-weight: bold;" id="lucroGeral">R$ --</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Instagram -->
+                    <div class="col-md-4">
+                        <div style="background: linear-gradient(135deg, #27ae60 0%, #229954 100%); border-radius: 12px; padding: 20px; color: white; position: relative;">
+                            <div style="position: absolute; top: 10px; right: 15px; background: rgba(255,255,255,0.2); padding: 3px 8px; border-radius: 10px; font-size: 0.7rem;" id="orcamentoInstagram">
+                                R$ --
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <i class="fab fa-instagram" style="margin-right: 8px;"></i>
+                                <strong>Instagram</strong>
+                            </div>
+                            <div style="text-align: center; margin: 20px 0;">
+                                <div style="font-size: 2.5rem; font-weight: bold;" id="roiInstagram">--</div>
+                                <div style="font-size: 0.9rem; opacity: 0.9;">ROI do Canal</div>
+                            </div>
+                            <div style="display: flex; justify-content: space-around; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 15px;">
+                                <div style="text-align: center;">
+                                    <div style="font-size: 0.8rem; opacity: 0.8;">Vendas</div>
+                                    <div style="font-weight: bold;" id="vendasInstagram">R$ --</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 0.8rem; opacity: 0.8;">Gastos</div>
+                                    <div style="font-weight: bold;" id="gastosInstagram">R$ --</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 0.8rem; opacity: 0.8;">Lucro</div>
+                                    <div style="font-weight: bold;" id="lucroInstagram">R$ --</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Grupos -->
+                    <div class="col-md-4">
+                        <div style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); border-radius: 12px; padding: 20px; color: white; position: relative;">
+                            <div style="position: absolute; top: 10px; right: 15px; background: rgba(255,255,255,0.2); padding: 3px 8px; border-radius: 10px; font-size: 0.7rem;" id="orcamentoGrupos">
+                                R$ --
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <i class="fas fa-users" style="margin-right: 8px;"></i>
+                                <strong>Grupos</strong>
+                            </div>
+                            <div style="text-align: center; margin: 20px 0;">
+                                <div style="font-size: 2.5rem; font-weight: bold;" id="roiGrupos">--</div>
+                                <div style="font-size: 0.9rem; opacity: 0.9;">ROI do Canal</div>
+                            </div>
+                            <div style="display: flex; justify-content: space-around; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 15px;">
+                                <div style="text-align: center;">
+                                    <div style="font-size: 0.8rem; opacity: 0.8;">Vendas</div>
+                                    <div style="font-weight: bold;" id="vendasGrupos">R$ --</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 0.8rem; opacity: 0.8;">Gastos</div>
+                                    <div style="font-weight: bold;" id="gastosGrupos">R$ --</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 0.8rem; opacity: 0.8;">Lucro</div>
+                                    <div style="font-weight: bold;" id="lucroGrupos">R$ --</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Looker-style Two Column Tables -->
+            <div id="twoColumnView" style="display: none;">
+                <div class="tables-container">
+                    <!-- Coluna Esquerda: Dados Cumulativos -->
+                    <div class="table-column">
+                        <div class="table-header" style="text-align: center;">
+                            <h3 id="leftColumnTitle">Data e Hora ↓</h3>
+                            <div class="table-subtitle" id="leftColumnSubtitle">Valor Usado | Vendas | ROI (Cumulativo)</div>
+                        </div>
+                        <div class="table-wrapper">
+                            <table class="data-table" style="width:100%; table-layout:fixed; border-collapse:collapse;">
+                                <thead>
+                                    <tr>
+                                        <th style="width:35%; text-align:left; padding:10px; background:#333;">Data e Hora</th>
+                                        <th style="width:18%; text-align:center; padding:10px; background:#333;">Valor Usado</th>
+                                        <th style="width:18%; text-align:center; padding:10px; background:#333;">Vendas</th>
+                                        <th style="width:19%; text-align:center; padding:10px; background:#333;">ROI</th>
+                                        <th style="width:10%; text-align:center; padding:10px; background:#333;">●</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cumulativeData">
+                                    <tr><td colspan="5" class="loading-cell">Carregando dados cumulativos...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Coluna Direita: Dados por Intervalo -->
+                    <div class="table-column">
+                        <div class="table-header" style="text-align: center;">
+                            <h3 id="rightColumnTitle">Data e Hora ↓</h3>
+                            <div class="table-subtitle" id="rightColumnSubtitle">Valor Usado | Vendas | ROI (Última Faixa 30min)</div>
+                        </div>
+                        <div class="table-wrapper">
+                            <table class="data-table" style="width:100%; table-layout:fixed; border-collapse:collapse;">
+                                <thead>
+                                    <tr>
+                                        <th style="width:35%; text-align:left; padding:10px; background:#333;">Data e Hora</th>
+                                        <th style="width:18%; text-align:center; padding:10px; background:#333;">Valor Usado</th>
+                                        <th style="width:18%; text-align:center; padding:10px; background:#333;">Vendas</th>
+                                        <th style="width:19%; text-align:center; padding:10px; background:#333;">ROI</th>
+                                        <th style="width:10%; text-align:center; padding:10px; background:#333;">●</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="intervalData">
+                                    <tr><td colspan="5" class="loading-cell">Carregando dados da faixa...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HORA DO PIX VIEW -->
+            <div id="horaPixView" style="display: none;">
+                <div style="padding: 20px;">
+                    <!-- Header -->
+                    <div class="page-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 15px; margin-bottom: 25px;">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h2 style="color: white; margin-bottom: 5px; font-weight: 600;">
+                                    <i class="fas fa-clock"></i> Hora do Pix
+                                </h2>
+                                <div style="color: rgba(255,255,255,0.9); font-size: 0.9rem;">
+                                    Monitoramento de sorteios em tempo real
+                                </div>
+                            </div>
+                            <button class="btn btn-light" onclick="collectHoraPixNow()" id="btnCollectHoraPix">
+                                <i class="fas fa-sync-alt"></i> Atualizar Agora
+                            </button>
+                        </div>
+                        <!-- Status Line -->
+                        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.2);">
+                            <div class="d-flex align-items-center text-white">
+                                <span id="horaPixLastUpdate">Última atualização: --</span>
+                                <span style="margin-left: 20px;" id="horaPixNextUpdate">Próxima: --:--</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cards de Totais -->
+                    <div class="row g-3 mb-4">
+                        <!-- Card 1: Prêmios -->
+                        <div class="col-lg-2 col-md-4 col-sm-6">
+                            <div class="card text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 15px;">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-trophy fa-2x mb-2"></i>
+                                    <h6>Prêmios</h6>
+                                    <h4 id="horaPixTotalPrize">R$ 0</h4>
+                                    <small id="horaPixDrawsCount">0 sorteios</small>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Card 2: Receita -->
+                        <div class="col-lg-2 col-md-4 col-sm-6">
+                            <div class="card text-white" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); border: none; border-radius: 15px;">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-dollar-sign fa-2x mb-2"></i>
+                                    <h6>Receita</h6>
+                                    <h4 id="horaPixTotalRevenue">R$ 0</h4>
+                                    <small id="horaPixActiveDraws">0 ativos</small>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Card 3: Taxa Plataforma (NOVO) -->
+                        <div class="col-lg-2 col-md-4 col-sm-6">
+                            <div class="card text-white" style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); border: none; border-radius: 15px;">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-hand-holding-usd fa-2x mb-2"></i>
+                                    <h6>Taxa (3%)</h6>
+                                    <h4 id="horaPixTotalFee">R$ 0</h4>
+                                    <small>Plataforma</small>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Card 4: Lucro -->
+                        <div class="col-lg-3 col-md-6 col-sm-6">
+                            <div class="card text-white" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border: none; border-radius: 15px;">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-chart-line fa-2x mb-2"></i>
+                                    <h6>Lucro Líquido</h6>
+                                    <h4 id="horaPixTotalProfit">R$ 0</h4>
+                                    <small id="horaPixFinishedDraws">0 finalizados</small>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Card 5: ROI -->
+                        <div class="col-lg-3 col-md-6 col-sm-6">
+                            <div class="card text-white" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); border: none; border-radius: 15px;">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-percentage fa-2x mb-2"></i>
+                                    <h6>ROI Médio</h6>
+                                    <h4 id="horaPixTotalROI">0%</h4>
+                                    <small>Retorno investido</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tabs -->
+                    <ul class="nav nav-tabs mb-3" id="horaPixTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="tab-active" data-bs-toggle="tab" data-bs-target="#activeDraws" type="button">
+                                <i class="fas fa-play-circle"></i> Ativos <span class="badge bg-success ms-1" id="badgeActive">0</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="tab-finished" data-bs-toggle="tab" data-bs-target="#finishedDraws" type="button">
+                                <i class="fas fa-check-circle"></i> Finalizados <span class="badge bg-primary ms-1" id="badgeFinished">0</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="tab-stats" data-bs-toggle="tab" data-bs-target="#statsView" type="button">
+                                <i class="fas fa-chart-bar"></i> Estatísticas
+                            </button>
+                        </li>
+                    </ul>
+
+                    <!-- Tab Content -->
+                    <div class="tab-content" id="horaPixTabContent">
+                        <!-- Sorteios Ativos -->
+                        <div class="tab-pane fade show active" id="activeDraws" role="tabpanel">
+                            <div id="activeDrawsList" class="row g-3">
+                                <div class="col-12 text-center text-muted py-5">
+                                    <i class="fas fa-spinner fa-spin fa-3x mb-3"></i>
+                                    <p>Carregando sorteios ativos...</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sorteios Finalizados -->
+                        <div class="tab-pane fade" id="finishedDraws" role="tabpanel">
+                            <div id="finishedDrawsList" class="row g-3">
+                                <div class="col-12 text-center text-muted py-5">
+                                    <i class="fas fa-info-circle fa-3x mb-3"></i>
+                                    <p>Nenhum sorteio finalizado hoje</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Estatísticas -->
+                        <div class="tab-pane fade" id="statsView" role="tabpanel">
+                            <div class="row g-4">
+                                <div class="col-md-12">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h5 class="mb-0"><i class="fas fa-chart-line"></i> Evolução do Dia</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <canvas id="evolutionChart" height="80"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Inline JavaScript functions for immediate availability
+        
+        // Get today's date in Brazilian format (DD/MM/YYYY) for filtering
+        function getTodayBrazilianFormat() {
+            // Usar timezone do Brasil para garantir data correta
+            const today = new Date();
+            // Ajustar para timezone brasileiro (UTC-3)
+            const brazilOffset = -3 * 60; // minutos
+            const utc = today.getTime() + (today.getTimezoneOffset() * 60000);
+            const brazilTime = new Date(utc + (brazilOffset * 60000));
+            
+            const day = brazilTime.getDate().toString().padStart(2, '0');
+            const month = (brazilTime.getMonth() + 1).toString().padStart(2, '0');
+            const year = brazilTime.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
+        
+        // Mock data using TODAY's date
+        function getMockDataForToday() {
+            const todayBR = getTodayBrazilianFormat(); // Gets current system date in DD/MM/YYYY
+            
+            return {
+                cumulative: [
+                    { dateTime: `${todayBR} 09:30:00`, valorUsado: 1200.00, vendas: 2800.00, roi: 2.33 },
+                    { dateTime: `${todayBR} 10:15:00`, valorUsado: 1580.50, vendas: 3420.80, roi: 2.16 },
+                    { dateTime: `${todayBR} 11:00:00`, valorUsado: 2059.19, vendas: 4524.84, roi: 2.20 },
+                    { dateTime: `${todayBR} 11:30:00`, valorUsado: 2350.75, vendas: 5120.40, roi: 2.18 }
+                ],
+                interval: [
+                    { dateTime: `${todayBR} 09:00:00 às 09:30:00`, valorUsado: 180.25, vendas: 420.15, roi: 2.33 },
+                    { dateTime: `${todayBR} 09:30:00 às 10:00:00`, valorUsado: 200.50, vendas: 380.30, roi: 1.90 },
+                    { dateTime: `${todayBR} 10:00:00 às 10:30:00`, valorUsado: 239.51, vendas: 620.80, roi: 2.59 },
+                    { dateTime: `${todayBR} 10:30:00 às 11:00:00`, valorUsado: 291.25, vendas: 695.60, roi: 2.39 }
+                ]
+            };
+        }
+        
+        // Utility functions
+        function formatCurrency(value) {
+            if (!value || isNaN(value)) return 'R$ 0,00';
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+        }
+        
+        function formatROI(roi) {
+            if (!roi || isNaN(roi)) return '0.00';
+            return parseFloat(roi).toFixed(2);
+        }
+        
+        function getROIClass(roi) {
+            const value = parseFloat(roi) || 0;
+            if (value >= 2.0) return 'roi-excellent';
+            if (value >= 1.0) return 'roi-good';
+            return 'roi-attention';
+        }
+        
+        function getStatusDot(roi) {
+            const value = parseFloat(roi) || 0;
+            let statusClass = 'status-attention';
+            if (value >= 2.0) statusClass = 'status-excellent';
+            else if (value >= 1.0) statusClass = 'status-good';
+            return `<span class="status-dot ${statusClass}"></span>`;
+        }
+        
+        // Main functions
+        function populateTable(tableId, data) {
+            console.log('Populating table:', tableId, 'with', data.length, 'items');
+            const tbody = document.getElementById(tableId);
+            
+            if (!tbody) {
+                console.error('Table element not found:', tableId);
+                return;
+            }
+            
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="loading-cell">Nenhum dado disponível</td></tr>';
+                return;
+            }
+            
+            // Sort data chronologically (oldest first, most recent last/bottom)
+            const sortedData = [...data].sort((a, b) => {
+                // Convert date from DD/MM/YYYY HH:mm:ss to comparable format
+                const parseDate = (dateStr) => {
+                    try {
+                        // Handle both simple dates and date ranges (with "às")
+                        const cleanDate = dateStr.split(' às ')[0]; // Take first part if range
+                        const [datePart, timePart] = cleanDate.split(' ');
+                        const [day, month, year] = datePart.split('/');
+                        const fullDate = `${year}-${month}-${day} ${timePart || '00:00:00'}`;
+                        return new Date(fullDate);
+                    } catch (e) {
+                        return new Date(0); // Default to epoch if parsing fails
+                    }
+                };
+                
+                const dateA = parseDate(a.dateTime);
+                const dateB = parseDate(b.dateTime);
+                return dateA - dateB; // Ascending order (oldest to newest)
+            });
+            
+            console.log('Data sorted chronologically (oldest first):', sortedData.length, 'items');
+            
+            let html = '';
+            sortedData.forEach(row => {
+                html += `
+                    <tr>
+                        <td class="datetime">${row.dateTime}</td>
+                        <td class="currency">${formatCurrency(row.valorUsado)}</td>
+                        <td class="currency">${formatCurrency(row.vendas)}</td>
+                        <td><span class="${getROIClass(row.roi)}">${formatROI(row.roi)}</span></td>
+                        <td>${getStatusDot(row.roi)}</td>
+                    </tr>
+                `;
+            });
+            
+            tbody.innerHTML = html;
+            console.log('Table', tableId, 'populated successfully');
+        }
+        
+        function loadAllTableData() {
+            console.log('Loading all table data...');
+            const todayMockData = getMockDataForToday();
+            populateTable('cumulativeData', todayMockData.cumulative);
+            populateTable('intervalData', todayMockData.interval);
+            console.log('All tables loaded!');
+        }
+        
+        // Button handlers
+        function handleApplyFilter() {
+            console.log('Apply filter clicked');
+            const dateInput = document.getElementById('dateFilter');
+            if (!dateInput || !dateInput.value) {
+                alert('Selecione uma data primeiro');
+                return;
+            }
+            
+            const selectedDate = dateInput.value;
+            const [year, month, day] = selectedDate.split('-');
+            const targetDate = `${day}/${month}/${year}`;
+            
+            console.log('Filtering by date:', targetDate);
+            
+            // Use API data if available, otherwise use mock data for TODAY
+            const todayMockData = getMockDataForToday();
+            const dataSource = currentAPIData || {
+                cumulativeData: todayMockData.cumulative,
+                intervalData: todayMockData.interval
+            };
+            
+            console.log('🎯 FILTRANDO DADOS POR DATA:', targetDate);
+            console.log('📊 Dados disponíveis antes do filtro:');
+            console.log('   - Cumulativo:', dataSource.cumulativeData?.length || 0);
+            console.log('   - Intervalo:', dataSource.intervalData?.length || 0);
+            
+            const filteredCumulative = (dataSource.cumulativeData || []).filter(row => 
+                row.dateTime && row.dateTime.includes(targetDate)
+            );
+            const filteredInterval = (dataSource.intervalData || []).filter(row => 
+                row.dateTime && row.dateTime.includes(targetDate)
+            );
+            
+            console.log('📊 Dados encontrados após filtro:');
+            console.log('   - Cumulativo:', filteredCumulative.length);
+            console.log('   - Intervalo:', filteredInterval.length);
+            
+            if (filteredCumulative.length === 0 && filteredInterval.length === 0) {
+                console.warn('⚠️ Nenhum dado encontrado para a data especificada');
+                alert(`Nenhum dado encontrado para a data ${targetDate}. Mostrando todos os dados disponíveis.`);
+                // Mostrar todos os dados se não encontrar nenhum para a data específica
+                populateTable('cumulativeData', dataSource.cumulativeData || []);
+                populateTable('intervalData', dataSource.intervalData || []);
+            } else {
+                console.log('✅ Mostrando dados filtrados para a data:', targetDate);
+                populateTable('cumulativeData', filteredCumulative);
+                populateTable('intervalData', filteredInterval);
+            }
+        }
+        
+        function handleClearFilter() {
+            console.log('🔄 Clear filter clicked - mostrando TODOS os dados REAIS');
+            // Reset to current system date (TODAY) but don't auto-filter
+            ensureTodayDate();
+            // Reload data for current view WITHOUT auto-filter (show all real data)
+            if (currentView === 'orcamento') {
+                loadDashboardData();
+            } else {
+                loadAPIData(currentView, false);
+            }
+        }
+        
+        function handleForceLoad() {
+            console.log('⚡ Force load clicked - carregando TODOS os dados REAIS');
+            // Always ensure we have today's date
+            ensureTodayDate();
+            // Force reload data for current view WITHOUT auto-filter (show all real data)
+            if (currentView === 'orcamento') {
+                loadDashboardData();
+            } else {
+                loadAPIData(currentView, false);
+            }
+        }
+        
+        // API data loading
+        let currentAPIData = null;
+        let currentView = 'geral';
+        
+        // Ensure date input is always set to TODAY (current system date)
+        function ensureTodayDate() {
+            const dateInput = document.getElementById('dateFilter');
+            const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+            
+            if (dateInput) {
+                // Always set to today's date, regardless of what was there before
+                dateInput.value = today;
+                console.log('Date input set to TODAY:', today);
+            } else {
+                console.error('Date input element not found!');
+            }
+        }
+        
+        async function loadAPIData(view, autoFilterToday = false) {
+            console.log('\n=== LOADING API DATA ===');
+            console.log('View:', view, '| Auto-filter today:', autoFilterToday);
+            
+            // Always ensure today's date is set
+            ensureTodayDate();
+            
+            try {
+                // Special handling for orcamento view - use different endpoint
+                const url = view === 'orcamento' ? '/api/imperio/orcamento/dashboard' : `/api/imperio/looker/${view}`;
+                console.log('Fetching URL:', url);
+                
+                const response = await fetch(url);
+                console.log('Response status:', response.status, response.statusText);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('API SUCCESS - Received data for', view);
+                
+                // Handle different data formats for orcamento vs looker views
+                if (view === 'orcamento') {
+                    console.log('📊 Dashboard data received - status:', data.status);
+                    console.log('📊 Historico coletas:', (data.historico_coletas || []).length, 'items');
+                    
+                    // For orcamento view, the dashboard is handled separately
+                    // This loadAPIData is called but orcamento uses loadDashboardData instead
+                    console.log('⚠️ Orcamento view should use loadDashboardData, not loadAPIData');
+                    return data;
+                } else {
+                    console.log('- cumulativeData:', (data.cumulativeData || []).length, 'items');
+                    console.log('- intervalData:', (data.intervalData || []).length, 'items');
+                    console.log('- dateRange:', data.dateRange || 'N/A');
+                }
+                
+                // Store the data
+                currentAPIData = data;
+                
+                // APLICAR FILTRO INTELIGENTE POR DATA ATUAL (only for looker views)
+                if (view !== 'orcamento') {
+                    const todayBR = getTodayBrazilianFormat();
+                    console.log('🎯 APLICANDO FILTRO AUTOMÁTICO PARA DATA:', todayBR);
+                    console.log('📊 Dados cumulativos totais:', data.cumulativeData?.length || 0);
+                    console.log('📊 Dados intervalos totais:', data.intervalData?.length || 0);
+                    
+                    // Filtrar dados para data atual
+                    const todayCumulative = (data.cumulativeData || []).filter(row => 
+                        row.dateTime && row.dateTime.includes(todayBR)
+                    );
+                    const todayInterval = (data.intervalData || []).filter(row => 
+                        row.dateTime && row.dateTime.includes(todayBR)
+                    );
+                    
+                    console.log('📊 Dados de HOJE - Cumulativo:', todayCumulative.length);
+                    console.log('📊 Dados de HOJE - Intervalo:', todayInterval.length);
+                    
+                    // Se não temos dados de hoje, mostrar os mais recentes
+                    if (todayCumulative.length === 0 && todayInterval.length === 0) {
+                        console.log('⚠️ Sem dados para hoje, mostrando todos os dados disponíveis');
+                        populateTable('cumulativeData', data.cumulativeData || []);
+                        populateTable('intervalData', data.intervalData || []);
+                    } else {
+                        console.log('✅ Mostrando dados filtrados para HOJE');
+                        populateTable('cumulativeData', todayCumulative);
+                        populateTable('intervalData', todayInterval);
+                    }
+                }
+                
+                console.log('=== API DATA LOADED SUCCESSFULLY ===\n');
+                return data;
+                
+            } catch (error) {
+                console.error('\nAPI FAILED for', view, ':', error.message);
+                console.log('Using mock data as fallback...');
+                
+                const todayMockData = getMockDataForToday();
+                console.log('Mock data generated:', todayMockData.cumulative.length, 'cumulative,', todayMockData.interval.length, 'interval');
+                
+                populateTable('cumulativeData', todayMockData.cumulative);
+                populateTable('intervalData', todayMockData.interval);
+                
+                console.log('=== FALLBACK DATA LOADED ===\n');
+                return null;
+            }
+        }
+        
+        // Navigation setup (com proteção contra listeners duplicados)
+        let navigationSetup = false;
+        function setupNavigation() {
+            if (navigationSetup) {
+                console.log('Navigation already setup, skipping duplicate setup');
+                return;
+            }
+            
+            console.log('Setting up navigation');
+            const menuItems = document.querySelectorAll('.menu-item[data-view]');
+            
+            menuItems.forEach(item => {
+                if (item && item.addEventListener) {
+                    // Remove any existing listeners first
+                    item.removeEventListener('click', handleMenuClick);
+                    // Add the new listener
+                    item.addEventListener('click', handleMenuClick);
+                }
+            });
+            
+            navigationSetup = true;
+            console.log('Navigation setup completed');
+        }
+        
+        // Separate function to handle menu clicks (easier to remove/add)
+        function handleMenuClick(e) {
+            e.preventDefault();
+            const view = this.getAttribute('data-view');
+            console.log('Menu clicked:', view);
+            
+            // Update active menu item
+            const menuItems = document.querySelectorAll('.menu-item[data-view]');
+            menuItems.forEach(mi => mi.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Update URL hash
+            window.location.hash = view;
+            
+            // Update current view
+            currentView = view;
+
+            // Handle different view types
+            if (view === 'orcamento') {
+                // Show dashboard view, hide table view
+                showDashboardView();
+                loadDashboardData();
+            } else if (view === 'horapix') {
+                // Show Hora do Pix view
+                showHoraPixView();
+                loadHoraPixData();
+            } else {
+                // Show table view, hide dashboard view
+                showTableView();
+
+                // Update column titles
+                updateColumnTitles(view);
+
+                // Ensure date is set
+                ensureTodayDate();
+
+                // Load API data for this view (WITHOUT auto-filter - show all real data)
+                // Skip loadAPIData for orcamento and horapix as they're handled separately
+                if (view !== 'orcamento' && view !== 'horapix') {
+                    loadAPIData(view, false);
+                }
+            }
+        }
+        
+        // Handle hash changes (APENAS atualiza UI - sem recarregar dados)
+        window.addEventListener('hashchange', function() {
+            const hash = window.location.hash.substring(1);
+            if (hash && ['orcamento', 'geral', 'perfil', 'grupos', 'horapix'].includes(hash)) {
+                updateActiveMenuItem(hash);
+                currentView = hash;
+
+                if (hash === 'orcamento') {
+                    showDashboardView();
+                    // loadDashboardData(); - REMOVIDO para evitar loop
+                } else if (hash === 'horapix') {
+                    showHoraPixView();
+                    // loadHoraPixData(); - REMOVIDO para evitar loop
+                } else {
+                    showTableView();
+                    updateColumnTitles(hash);
+                    ensureTodayDate();
+                    // loadAPIData(hash, false); - REMOVIDO para evitar loop
+                }
+            }
+        });
+        
+        function updateActiveMenuItem(view) {
+            const menuItems = document.querySelectorAll('.menu-item[data-view]');
+            menuItems.forEach(item => {
+                item.classList.remove('active');
+                if (item.getAttribute('data-view') === view) {
+                    item.classList.add('active');
+                }
+            });
+        }
+        
+        function updateColumnTitles(view) {
+            const titles = {
+                'geral': {
+                    leftTitle: 'Data e Hora ↓',
+                    leftSubtitle: 'Valor Usado | Vendas | ROI (Cumulativo)',
+                    rightTitle: 'Data e Hora ↓',
+                    rightSubtitle: 'Valor Usado | Vendas | ROI (Última Faixa 30min)'
+                },
+                'perfil': {
+                    leftTitle: 'Data e Hora ↓',
+                    leftSubtitle: 'Valor Usado | Vendas | ROI (Instagram Total)',
+                    rightTitle: 'Data e Hora ↓',
+                    rightSubtitle: 'Valor Usado | Vendas | ROI (Instagram Faixa 30min)'
+                },
+                'grupos': {
+                    leftTitle: 'Data e Hora ↓',
+                    leftSubtitle: 'Valor Usado | Vendas | ROI (Grupos Total)',
+                    rightTitle: 'Data e Hora ↓',
+                    rightSubtitle: 'Valor Usado | Vendas | ROI (Grupos Faixa 30min)'
+                }
+            };
+
+            const config = titles[view] || titles['geral'];
+            
+            const leftTitle = document.getElementById('leftColumnTitle');
+            const leftSubtitle = document.getElementById('leftColumnSubtitle');
+            const rightTitle = document.getElementById('rightColumnTitle');
+            const rightSubtitle = document.getElementById('rightColumnSubtitle');
+            
+            if (leftTitle) leftTitle.textContent = config.leftTitle;
+            if (leftSubtitle) leftSubtitle.textContent = config.leftSubtitle;
+            if (rightTitle) rightTitle.textContent = config.rightTitle;
+            if (rightSubtitle) rightSubtitle.textContent = config.rightSubtitle;
+        }
+
+        // Initialize when DOM is ready
+        // Dashboard View Management Functions
+        function showDashboardView() {
+            const orcamentoDashboard = document.getElementById('orcamentoDashboard');
+            const twoColumnView = document.getElementById('twoColumnView');
+            const horaPixView = document.getElementById('horaPixView');
+
+            if (orcamentoDashboard) orcamentoDashboard.style.display = 'block';
+            if (twoColumnView) twoColumnView.style.display = 'none';
+            if (horaPixView) horaPixView.style.display = 'none';
+
+            console.log('Dashboard view shown');
+        }
+
+        function showTableView() {
+            const orcamentoDashboard = document.getElementById('orcamentoDashboard');
+            const twoColumnView = document.getElementById('twoColumnView');
+            const horaPixView = document.getElementById('horaPixView');
+
+            if (orcamentoDashboard) orcamentoDashboard.style.display = 'none';
+            if (twoColumnView) twoColumnView.style.display = 'block';
+            if (horaPixView) horaPixView.style.display = 'none';
+
+            console.log('Table view shown');
+        }
+        
+        // Dashboard Data Loading Functions
+        async function loadDashboardData() {
+            console.log('Loading dashboard data from database...');
+            
+            try {
+                // Carregar dados do endpoint principal
+                const response = await fetch('/api/imperio/dashboard');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    updateDashboardMetrics(data);
+                    updateCollectionHistory(data.historico_coletas || []);
+                } else {
+                    console.error('Dashboard API error:', data);
+                    // Manter cards vazios em vez de mostrar dados falsos
+                }
+                
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+                // Manter cards vazios em vez de mostrar dados falsos
+            }
+        }
+
+        function updateCollectionHistory(history) {
+            const container = document.getElementById('collectionHistory');
+            
+            if (!history || history.length === 0) {
+                container.innerHTML = '<div class="text-center text-muted">Nenhum histórico disponível</div>';
+                return;
+            }
+            
+            const historyHTML = history.map(item => {
+                const successClass = item.status === 'success' ? 'success' : 'warning';
+                const roiClass = item.roi >= 2.0 ? 'success' : (item.roi >= 1.5 ? 'warning' : 'danger');
+                
+                return `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #eee; background: rgba(255,255,255,0.8); border-radius: 8px; margin-bottom: 8px;">
+                        <div style="flex: 1;">
+                            <div style="font-weight: bold; color: #2c3e50;">${item.timestamp}</div>
+                            <div style="font-size: 0.85rem; color: #666;">
+                                <span class="badge bg-${successClass} me-2">${item.status.toUpperCase()}</span>
+                                ${item.status === 'success' ? 'Coleta realizada com sucesso' : 'Coleta com problemas'}
+                            </div>
+                        </div>
+                        <div style="text-align: right; font-size: 0.9rem;">
+                            <div><strong>ROI:</strong> <span class="text-${roiClass}">${item.roi.toFixed(2)}</span></div>
+                            <div><strong>Vendas:</strong> R$ ${item.vendas.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
+                            <div><strong>Lucro:</strong> R$ ${item.lucro.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            container.innerHTML = historyHTML;
+        }
+        
+        function updateDashboardMetrics(data) {
+            const totals = data.totals || {};
+            const canais = data.channels || {};
+            
+            // Atualizar cards principais com dados dos totals
+            document.getElementById('roiGeral').textContent = (totals.roi || 0).toFixed(2);
+            document.getElementById('vendasHoje').textContent = `R$ ${(totals.sales || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+            document.getElementById('gastosHoje').textContent = `R$ ${(totals.spend || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+            document.getElementById('lucroHoje').textContent = `R$ ${(totals.profit || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+            
+            // Atualizar cards de canais
+            if (canais.geral) {
+                document.getElementById('roiGeral2').textContent = (canais.geral.roi || 0).toFixed(2);
+                document.getElementById('vendasGeral').textContent = `R$ ${(canais.geral.sales || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+                document.getElementById('gastosGeral').textContent = `R$ ${(canais.geral.spend || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+                document.getElementById('lucroGeral').textContent = `R$ ${(canais.geral.profit || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+                document.getElementById('orcamentoGeral').textContent = `R$ ${(canais.geral.budget || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+            }
+            
+            if (canais.instagram) {
+                document.getElementById('roiInstagram').textContent = (canais.instagram.roi || 0).toFixed(2);
+                document.getElementById('vendasInstagram').textContent = `R$ ${(canais.instagram.sales || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+                document.getElementById('gastosInstagram').textContent = `R$ ${(canais.instagram.spend || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+                document.getElementById('lucroInstagram').textContent = `R$ ${(canais.instagram.profit || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+                document.getElementById('orcamentoInstagram').textContent = `R$ ${(canais.instagram.budget || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+            }
+            
+            if (canais.grupos) {
+                document.getElementById('roiGrupos').textContent = (canais.grupos.roi || 0).toFixed(2);
+                document.getElementById('vendasGrupos').textContent = `R$ ${(canais.grupos.sales || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+                document.getElementById('gastosGrupos').textContent = `R$ ${(canais.grupos.spend || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+                document.getElementById('lucroGrupos').textContent = `R$ ${(canais.grupos.profit || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+                document.getElementById('orcamentoGrupos').textContent = `R$ ${(canais.grupos.budget || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+            }
+            
+            // Atualizar status
+            document.getElementById('lastCollectionInfo').textContent = `Última coleta: ${data.last_update || '--'}`;
+        }
+        
+        // Função removida para evitar interferência com dados reais
+        
+        function updateCollectionStatus(data) {
+            const lastUpdate = document.getElementById('lastUpdate');
+            const dataCount = document.getElementById('dataCount');
+            
+            if (lastUpdate && data.last_update) {
+                const updateDate = new Date(data.last_update);
+                lastUpdate.textContent = `Última coleta: ${updateDate.toLocaleString('pt-BR')}`;
+            }
+            
+            if (dataCount) {
+                dataCount.textContent = `Período: ${data.calculation_period || 'Dados cumulativos de hoje'}`;
+            }
+        }
+        
+        async function updateROIChart() {
+            const canvas = document.getElementById('roiChart');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            
+            // Destroy existing chart if exists
+            if (window.roiChartInstance) {
+                window.roiChartInstance.destroy();
+            }
+            
+            // Sample data for ROI evolution
+            const labels = [];
+            const roiData = [];
+            
+            // Generate last 12 hours data
+            for (let i = 11; i >= 0; i--) {
+                const hour = new Date();
+                hour.setHours(hour.getHours() - i);
+                labels.push(hour.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}));
+                
+                // Simulate ROI evolution (starting lower, improving over time)
+                const baseROI = 1.8 + (Math.random() * 0.6);
+                const trend = (11 - i) * 0.03; // Positive trend
+                roiData.push(Math.max(0, baseROI + trend + (Math.random() * 0.2 - 0.1)));
+            }
+            
+            window.roiChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'ROI',
+                        data: roiData,
+                        borderColor: '#ffd700',
+                        backgroundColor: 'rgba(255, 215, 0, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 3,
+                            grid: {
+                                color: 'rgba(255,255,255,0.1)'
+                            },
+                            ticks: {
+                                color: '#ffffff',
+                                callback: function(value) {
+                                    return value.toFixed(1) + 'x';
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255,255,255,0.1)'
+                            },
+                            ticks: {
+                                color: '#ffffff'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#ffffff'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // =============================================
+        // =============================================
+        
+        // =============================================
+
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, initializing Imperio dashboard...');
+            
+            // Set today's date FIRST
+            const dateInput = document.getElementById('dateFilter');
+            const today = new Date().toISOString().split('T')[0];
+            if (dateInput) {
+                dateInput.value = today;
+                console.log('Date input set to:', today);
+            } else {
+                console.error('Date input element not found!');
+            }
+            
+            // Setup navigation
+            setupNavigation();
+            
+            // Load initial view based on hash (default to orcamento)
+            const hash = window.location.hash.substring(1) || 'orcamento';
+            currentView = hash;
+            updateActiveMenuItem(hash);
+            
+            console.log('Initializing with view:', hash);
+            
+            // Small delay to ensure DOM is fully ready
+            setTimeout(() => {
+                if (hash === 'orcamento') {
+                    showDashboardView();
+                    loadDashboardData();
+                } else if (hash === 'horapix') {
+                    showHoraPixView();
+                    loadHoraPixData();
+                } else {
+                    showTableView();
+                    updateColumnTitles(hash);
+                    // Carregamento único otimizado - sem chamadas duplas
+                    loadAPIData(hash, false);
+                }
+            }, 250);
+        });
+        
+        // REMOVIDO: Listener duplicado que causava chamadas duplas nas APIs
+        
+        // === AGENDAMENTO AUTOMÁTICO DE COLETA ===
+        let collectionInterval = null;
+        
+        function startAutoCollection() {
+            console.log('Iniciando coleta automática a cada 30 minutos...');
+            
+            // Limpar intervalo existente se houver
+            if (collectionInterval) {
+                clearInterval(collectionInterval);
+            }
+            
+            // DESABILITADO: Coleta automática JavaScript (servidor cuida disso)
+            // collectionInterval = setInterval(() => {
+            //     console.log('Executando coleta automática...');
+            //     executeCollectionNow(true); // true = automática
+            // }, 1800000); // 30 minutos
+            console.log('⚠️ Coleta automática JavaScript DESABILITADA - servidor cuida das coletas');
+            
+            console.log('Agendamento de coleta configurado com sucesso!');
+        }
+        
+        function stopAutoCollection() {
+            if (collectionInterval) {
+                clearInterval(collectionInterval);
+                collectionInterval = null;
+                console.log('Agendamento de coleta interrompido.');
+            }
+        }
+        
+        // === FUNÇÃO COLETAR AGORA ===
+        async function executeCollectionNow(isAutomatic = false) {
+            console.log('🔄 INICIANDO COLETA:', isAutomatic ? 'AUTOMÁTICA' : 'MANUAL');
+            
+            const btn = document.getElementById('coletarAgoraBtn');
+            if (!btn) {
+                console.error('Botão coletarAgoraBtn não encontrado!');
+                return;
+            }
+            
+            const originalText = btn.innerHTML;
+            
+            try {
+                // Mostrar loading
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Coletando...';
+                btn.disabled = true;
+                
+                console.log('📡 Fazendo requisição para /api/imperio/collect-now...');
+                
+                // Chamar API de coleta
+                const response = await fetch('/api/imperio/collect-now', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                console.log('📡 Resposta recebida, status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                console.log('📦 Dados da coleta:', result);
+                
+                if (result.status === 'success') {
+                    console.log('✅ COLETA REALIZADA COM SUCESSO!');
+                    if (!isAutomatic) {
+                        alert('✅ Coleta realizada com sucesso! Nova linha adicionada às tabelas.');
+                    }
+                    
+                    // Atualizar dashboard após coleta
+                    console.log('🔄 Atualizando dashboard...');
+                    await refreshDashboard();
+                    console.log('✅ Dashboard atualizado!');
+                } else {
+                    console.error('❌ ERRO NA COLETA:', result);
+                    if (!isAutomatic) {
+                        alert('❌ Erro na coleta: ' + (result.message || 'Erro desconhecido'));
+                    }
+                }
+                
+            } catch (error) {
+                console.error('💥 ERRO DE CONEXÃO:', error);
+                if (!isAutomatic) {
+                    alert('❌ Erro de conexão: ' + error.message);
+                }
+            } finally {
+                // Restaurar botão
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                console.log('🔄 Botão restaurado');
+            }
+        }
+        
+        // === FUNÇÃO REFRESH DASHBOARD ===
+        async function refreshDashboard() {
+            console.log('🔄 Atualizando dashboard/tabelas...');
+            
+            try {
+                if (currentView === 'orcamento') {
+                    console.log('📊 Atualizando dashboard de orçamento...');
+                    await loadDashboardData();
+                } else {
+                    console.log('📊 Atualizando tabelas Looker:', currentView);
+                    await loadAPIData(currentView, false);
+                }
+                console.log('✅ Atualização concluída!');
+            } catch (error) {
+                console.error('❌ Erro ao atualizar:', error);
+                alert('Erro ao atualizar dados: ' + error.message);
+            }
+        }
+        
+        // === GERENCIAMENTO DE PRODUTO ===
+        let currentProductId = '68e7dc390d0e097d616ae52d';
+
+        function validateProductId(productId) {
+            // Validar formato básico do ID (24 caracteres hexadecimais)
+            const hexPattern = /^[a-fA-F0-9]{24}$/;
+            return hexPattern.test(productId);
+        }
+
+        async function changeProduct() {
+            const input = document.getElementById('productIdInput');
+            const newProductId = input.value.trim();
+            
+            // Validação básica
+            if (!newProductId) {
+                alert('❌ Digite um ID de produto válido.');
+                input.focus();
+                return;
+            }
+            
+            if (!validateProductId(newProductId)) {
+                alert('❌ ID de produto inválido. Deve ter 24 caracteres hexadecimais.');
+                input.focus();
+                return;
+            }
+            
+            if (newProductId === currentProductId) {
+                alert('ℹ️ Este produto já está sendo monitorado.');
+                return;
+            }
+            
+            const confirmed = confirm(`🔄 Alterar para o produto ${newProductId}?\\n\\nIsso reiniciará o monitoramento com dados do novo produto.`);
+            if (!confirmed) {
+                input.value = currentProductId; // Reverter
+                return;
+            }
+            
+            // Desabilitar campo durante processamento
+            input.disabled = true;
+            const saveBtn = event.target;
+            const originalText = saveBtn.innerHTML;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+            saveBtn.disabled = true;
+            
+            try {
+                const response = await fetch('/api/imperio/change-product', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({product_id: newProductId})
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    currentProductId = newProductId;
+                    alert('✅ Produto alterado com sucesso! Monitoramento reiniciado.');
+                    console.log('Novo produto:', newProductId);
+                    await refreshDashboard();
+                } else {
+                    alert('❌ Erro ao alterar produto: ' + (result.message || result.error));
+                    input.value = currentProductId; // Reverter
+                }
+            } catch (error) {
+                console.error('Erro ao alterar produto:', error);
+                alert('❌ Erro de conexão: ' + error.message);
+                input.value = currentProductId; // Reverter
+            } finally {
+                // Reabilitar campo
+                input.disabled = false;
+                saveBtn.innerHTML = originalText;
+                saveBtn.disabled = false;
+            }
+        }
+
+        // Função resetToDefault removida
+
+        // Permitir salvar com Enter
+        document.addEventListener('DOMContentLoaded', function() {
+            const input = document.getElementById('productIdInput');
+            if (input) {
+                input.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        changeProduct();
+                    }
+                });
+                
+                // Highlight no foco
+                input.addEventListener('focus', function() {
+                    this.select();
+                });
+            }
+        });
+
+        // ============================================
+        // HORA DO PIX - JAVASCRIPT
+        // ============================================
+
+        // Carregar dados do Hora do Pix
+        async function loadHoraPixData() {
+            console.log('Loading Hora do Pix data...');
+
+            try {
+                const response = await fetch('/api/imperio/horapix/latest');
+                const result = await response.json();
+
+                if (result.status === 'success' && result.data) {
+                    updateHoraPixUI(result.data);
+                } else {
+                    console.warn('Nenhum dado Hora do Pix disponível');
+                    showEmptyHoraPixState();
+                }
+            } catch (error) {
+                console.error('Erro ao carregar Hora do Pix:', error);
+                showHoraPixError();
+            }
+        }
+
+        // Atualizar UI com dados
+        function updateHoraPixUI(data) {
+            const totals = data.totals || {};
+            const draws = data.draws || [];
+
+            // Atualizar cards de totais
+            document.getElementById('horaPixTotalPrize').textContent =
+                `R$ ${totals.total_prize_value?.toLocaleString('pt-BR', {minimumFractionDigits: 2}) || '0,00'}`;
+            document.getElementById('horaPixDrawsCount').textContent =
+                `${totals.total_draws || 0} sorteios`;
+
+            document.getElementById('horaPixTotalRevenue').textContent =
+                `R$ ${totals.total_revenue?.toLocaleString('pt-BR', {minimumFractionDigits: 2}) || '0,00'}`;
+            document.getElementById('horaPixActiveDraws').textContent =
+                `${totals.active_draws || 0} ativos`;
+
+            document.getElementById('horaPixTotalFee').textContent =
+                `R$ ${totals.total_platform_fee?.toLocaleString('pt-BR', {minimumFractionDigits: 2}) || '0,00'}`;
+
+            document.getElementById('horaPixTotalProfit').textContent =
+                `R$ ${totals.total_profit?.toLocaleString('pt-BR', {minimumFractionDigits: 2}) || '0,00'}`;
+            document.getElementById('horaPixFinishedDraws').textContent =
+                `${totals.finished_draws || 0} finalizados`;
+
+            document.getElementById('horaPixTotalROI').textContent =
+                `${totals.total_roi?.toFixed(2) || '0.00'}%`;
+
+            // Atualizar badges
+            document.getElementById('badgeActive').textContent = totals.active_draws || 0;
+            document.getElementById('badgeFinished').textContent = totals.finished_draws || 0;
+
+            // Atualizar última atualização
+            if (data.collection_time) {
+                const time = new Date(data.collection_time);
+                document.getElementById('horaPixLastUpdate').textContent =
+                    `Última atualização: ${time.toLocaleString('pt-BR')}`;
+            }
+
+            // Renderizar sorteios
+            renderDraws(draws);
+        }
+
+        // Renderizar sorteios
+        function renderDraws(draws) {
+            const active = draws.filter(d => d.status === 'active');
+            const finished = draws.filter(d => d.status === 'done');
+
+            // Renderizar ativos
+            const activeList = document.getElementById('activeDrawsList');
+            if (active.length > 0) {
+                activeList.innerHTML = active.map(draw => createDrawCard(draw)).join('');
+            } else {
+                activeList.innerHTML = `
+                    <div class="col-12 text-center text-muted py-5">
+                        <i class="fas fa-info-circle fa-3x mb-3"></i>
+                        <p>Nenhum sorteio ativo no momento</p>
+                    </div>
+                `;
+            }
+
+            // Renderizar finalizados
+            const finishedList = document.getElementById('finishedDrawsList');
+            if (finished.length > 0) {
+                finishedList.innerHTML = finished.map(draw => createDrawCard(draw, true)).join('');
+            } else {
+                finishedList.innerHTML = `
+                    <div class="col-12 text-center text-muted py-5">
+                        <i class="fas fa-check-circle fa-3x mb-3"></i>
+                        <p>Nenhum sorteio finalizado hoje</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Criar card de sorteio
+        function createDrawCard(draw, isFinished = false) {
+            const statusBadge = isFinished ?
+                '<span class="badge bg-success">Finalizado</span>' :
+                '<span class="badge bg-primary">Ativo</span>';
+
+            const percentSold = draw.qty_total > 0 ?
+                (draw.qty_paid / draw.qty_total * 100).toFixed(1) : 0;
+
+            const roiColor = draw.roi > 0 ? 'success' : 'danger';
+
+            return `
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100" style="border-left: 4px solid ${isFinished ? '#28a745' : '#007bff'};">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <small class="text-muted">#${draw.id?.substring(0, 8)}</small>
+                            ${statusBadge}
+                        </div>
+                        <div class="card-body">
+                            <h6 class="card-title">${draw.title}</h6>
+                            <div class="mb-2">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <small>Vendido</small>
+                                    <small><strong>${draw.qty_paid}/${draw.qty_total}</strong> (${percentSold}%)</small>
+                                </div>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar ${isFinished ? 'bg-success' : 'bg-primary'}"
+                                         style="width: ${percentSold}%"></div>
+                                </div>
+                            </div>
+                            <div class="row g-2 text-center mt-3">
+                                <div class="col-4">
+                                    <div class="p-2" style="background: rgba(0,0,0,0.05); border-radius: 8px;">
+                                        <small class="d-block text-muted">Prêmio</small>
+                                        <strong style="font-size: 0.9em;">R$ ${draw.prize_value?.toLocaleString('pt-BR')}</strong>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="p-2" style="background: rgba(0,0,0,0.05); border-radius: 8px;">
+                                        <small class="d-block text-muted">Receita</small>
+                                        <strong style="font-size: 0.9em;">R$ ${draw.revenue?.toLocaleString('pt-BR')}</strong>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="p-2" style="background: rgba(255,0,0,0.1); border-radius: 8px; border: 1px solid rgba(255,0,0,0.2);">
+                                        <small class="d-block text-muted">Taxa 3%</small>
+                                        <strong style="font-size: 0.9em; color: #dc3545;">-R$ ${draw.platform_fee?.toLocaleString('pt-BR')}</strong>
+                                    </div>
+                                </div>
+                                <div class="col-6 mt-2">
+                                    <div class="p-2" style="background: rgba(0,0,0,0.05); border-radius: 8px;">
+                                        <small class="d-block text-muted">Lucro Líquido</small>
+                                        <strong class="text-${roiColor}">
+                                            R$ ${draw.profit?.toLocaleString('pt-BR')}
+                                        </strong>
+                                    </div>
+                                </div>
+                                <div class="col-6 mt-2">
+                                    <div class="p-2" style="background: rgba(0,0,0,0.05); border-radius: 8px;">
+                                        <small class="d-block text-muted">ROI</small>
+                                        <strong class="text-${roiColor}">${draw.roi?.toFixed(2)}%</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Coletar dados agora
+        async function collectHoraPixNow() {
+            const btn = document.getElementById('btnCollectHoraPix');
+            const originalText = btn.innerHTML;
+
+            try {
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Coletando...';
+                btn.disabled = true;
+
+                const response = await fetch('/api/imperio/horapix/collect', {
+                    method: 'POST'
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    console.log('Coleta realizada com sucesso');
+                    // Recarregar dados
+                    await loadHoraPixData();
+                } else {
+                    console.error('Erro na coleta:', result.error);
+                    alert('Erro ao coletar dados: ' + result.error);
+                }
+            } catch (error) {
+                console.error('Erro ao coletar dados:', error);
+                alert('Erro ao coletar dados. Verifique o console.');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // Mostrar estado vazio
+        function showEmptyHoraPixState() {
+            document.getElementById('horaPixTotalPrize').textContent = 'R$ 0,00';
+            document.getElementById('horaPixDrawsCount').textContent = '0 sorteios';
+            document.getElementById('horaPixTotalRevenue').textContent = 'R$ 0,00';
+            document.getElementById('horaPixActiveDraws').textContent = '0 ativos';
+            document.getElementById('horaPixTotalFee').textContent = 'R$ 0,00';
+            document.getElementById('horaPixTotalProfit').textContent = 'R$ 0,00';
+            document.getElementById('horaPixFinishedDraws').textContent = '0 finalizados';
+            document.getElementById('horaPixTotalROI').textContent = '0.00%';
+
+            document.getElementById('activeDrawsList').innerHTML = `
+                <div class="col-12 text-center text-muted py-5">
+                    <i class="fas fa-info-circle fa-3x mb-3"></i>
+                    <p>Nenhum dado disponível. Os dados serão coletados automaticamente a cada 30 minutos.</p>
+                </div>
+            `;
+        }
+
+        // Mostrar erro
+        function showHoraPixError() {
+            document.getElementById('activeDrawsList').innerHTML = `
+                <div class="col-12 text-center text-danger py-5">
+                    <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                    <p>Erro ao carregar dados. Tente novamente.</p>
+                </div>
+            `;
+        }
+
+        // Mostrar view Hora do Pix
+        function showHoraPixView() {
+            const orcamentoDashboard = document.getElementById('orcamentoDashboard');
+            const twoColumnView = document.getElementById('twoColumnView');
+            const horaPixView = document.getElementById('horaPixView');
+
+            if (orcamentoDashboard) orcamentoDashboard.style.display = 'none';
+            if (twoColumnView) twoColumnView.style.display = 'none';
+            if (horaPixView) horaPixView.style.display = 'block';
+
+            console.log('Hora do Pix view shown');
+        }
+
+        // === INICIALIZAÇÃO LIMPA - SEM COLETAS AUTOMÁTICAS ===
+        console.log('✅ Sistema carregado - APENAS scheduler backend (30min) faz coletas automáticas');
+
+        // Parar agendamento quando página for fechada
+        window.addEventListener('beforeunload', function() {
+            stopAutoCollection();
+        });
+
+        console.log('Inline JavaScript loaded successfully!');
+    </script>
+</body>
+</html>

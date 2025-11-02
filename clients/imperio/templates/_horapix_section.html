@@ -1,0 +1,130 @@
+            <!-- HORA DO PIX VIEW -->
+            <div id="horaPixView" style="display: none;">
+                <div style="padding: 20px;">
+                    <!-- Header -->
+                    <div class="page-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 15px; margin-bottom: 25px;">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h2 style="color: white; margin-bottom: 5px; font-weight: 600;">
+                                    <i class="fas fa-clock"></i> Hora do Pix
+                                </h2>
+                                <div style="color: rgba(255,255,255,0.9); font-size: 0.9rem;">
+                                    Monitoramento de sorteios em tempo real
+                                </div>
+                            </div>
+                            <button class="btn btn-light" onclick="collectHoraPixNow()" id="btnCollectHoraPix">
+                                <i class="fas fa-sync-alt"></i> Atualizar Agora
+                            </button>
+                        </div>
+                        <!-- Status Line -->
+                        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.2);">
+                            <div class="d-flex align-items-center text-white">
+                                <span id="horaPixLastUpdate">Última atualização: --</span>
+                                <span style="margin-left: 20px;" id="horaPixNextUpdate">Próxima: --:--</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cards de Totais -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <div class="card text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 15px;">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-trophy fa-2x mb-2"></i>
+                                    <h6>Total em Prêmios</h6>
+                                    <h4 id="horaPixTotalPrize">R$ 0</h4>
+                                    <small id="horaPixDrawsCount">0 sorteios</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-white" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); border: none; border-radius: 15px;">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-dollar-sign fa-2x mb-2"></i>
+                                    <h6>Receita Total</h6>
+                                    <h4 id="horaPixTotalRevenue">R$ 0</h4>
+                                    <small id="horaPixActiveDraws">0 ativos</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-white" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border: none; border-radius: 15px;">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-chart-line fa-2x mb-2"></i>
+                                    <h6>Lucro Total</h6>
+                                    <h4 id="horaPixTotalProfit">R$ 0</h4>
+                                    <small id="horaPixFinishedDraws">0 finalizados</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-white" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); border: none; border-radius: 15px;">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-percentage fa-2x mb-2"></i>
+                                    <h6>ROI Médio</h6>
+                                    <h4 id="horaPixTotalROI">0%</h4>
+                                    <small>Retorno sobre investimento</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tabs -->
+                    <ul class="nav nav-tabs mb-3" id="horaPixTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="tab-active" data-bs-toggle="tab" data-bs-target="#activeDraws" type="button">
+                                <i class="fas fa-play-circle"></i> Ativos <span class="badge bg-success ms-1" id="badgeActive">0</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="tab-finished" data-bs-toggle="tab" data-bs-target="#finishedDraws" type="button">
+                                <i class="fas fa-check-circle"></i> Finalizados <span class="badge bg-primary ms-1" id="badgeFinished">0</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="tab-stats" data-bs-toggle="tab" data-bs-target="#statsView" type="button">
+                                <i class="fas fa-chart-bar"></i> Estatísticas
+                            </button>
+                        </li>
+                    </ul>
+
+                    <!-- Tab Content -->
+                    <div class="tab-content" id="horaPixTabContent">
+                        <!-- Sorteios Ativos -->
+                        <div class="tab-pane fade show active" id="activeDraws" role="tabpanel">
+                            <div id="activeDrawsList" class="row g-3">
+                                <div class="col-12 text-center text-muted py-5">
+                                    <i class="fas fa-spinner fa-spin fa-3x mb-3"></i>
+                                    <p>Carregando sorteios ativos...</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sorteios Finalizados -->
+                        <div class="tab-pane fade" id="finishedDraws" role="tabpanel">
+                            <div id="finishedDrawsList" class="row g-3">
+                                <div class="col-12 text-center text-muted py-5">
+                                    <i class="fas fa-info-circle fa-3x mb-3"></i>
+                                    <p>Nenhum sorteio finalizado hoje</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Estatísticas -->
+                        <div class="tab-pane fade" id="statsView" role="tabpanel">
+                            <div class="row g-4">
+                                <div class="col-md-12">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h5 class="mb-0"><i class="fas fa-chart-line"></i> Evolução do Dia</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <canvas id="evolutionChart" height="80"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>

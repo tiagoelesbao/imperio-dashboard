@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PERFIL - ROI Imperio</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+            background: #1a1a1a;
+            color: #ffffff;
+            overflow: hidden;
+            zoom: 67%;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            background: #1a1a1a;
+        }
+
+        .sidebar {
+            width: 180px;
+            background: #2d2d2d;
+            padding: 20px 0;
+            border-right: 1px solid #404040;
+        }
+
+        .sidebar h3 {
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            padding: 0 15px;
+            letter-spacing: 0.5px;
+        }
+
+        .menu-item {
+            padding: 10px 15px;
+            color: #b0b0b0;
+            font-size: 12px;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            font-weight: 500;
+        }
+
+        .menu-item.active {
+            background: rgba(225, 48, 108, 0.1);
+            color: #e1306c;
+            border-left-color: #e1306c;
+        }
+
+        .main-content {
+            flex: 1;
+            background: #1a1a1a;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: #2d2d2d;
+            padding: 20px 25px;
+            border-bottom: 1px solid #404040;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 400;
+            color: #e1306c;
+            margin-bottom: 3px;
+        }
+
+        .header .subtitle {
+            color: #9aa0a6;
+            font-size: 12px;
+        }
+
+        .content-area {
+            flex: 1;
+            display: flex;
+            background: #1a1a1a;
+        }
+
+        .column {
+            flex: 1;
+            background: #1a1a1a;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .column:first-child {
+            border-right: 1px solid #313131;
+        }
+
+        .column-header {
+            background: #333333;
+            padding: 15px 20px;
+            border-bottom: 1px solid #404040;
+            text-align: center;
+        }
+
+        .column-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 3px;
+        }
+
+        .column-subtitle {
+            font-size: 10px;
+            color: #9aa0a6;
+            font-weight: 400;
+        }
+
+        .data-container {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table thead {
+            background: #333333;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .data-table th {
+            padding: 10px 8px;
+            text-align: left;
+            font-weight: 500;
+            color: #e8eaed;
+            border-bottom: 1px solid #404040;
+            font-size: 10px;
+        }
+
+        .data-table td {
+            padding: 8px 8px;
+            border-bottom: 1px solid #2d2d2d;
+            color: #e8eaed;
+            font-size: 10px;
+            white-space: nowrap;
+        }
+
+        .data-table tbody tr:nth-child(even) {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .data-table tbody tr:hover {
+            background: rgba(225, 48, 108, 0.05);
+        }
+
+        /* Instagram theme colors */
+        .roi-excellent { 
+            color: #e1306c; 
+            font-weight: 600;
+            background: rgba(225, 48, 108, 0.1);
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        
+        .roi-good { 
+            color: #f56040; 
+            font-weight: 600;
+            background: rgba(245, 96, 64, 0.1);
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        
+        .roi-attention { 
+            color: #833ab4; 
+            font-weight: 600;
+            background: rgba(131, 58, 180, 0.1);
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        .currency {
+            text-align: right;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+            font-size: 10px;
+        }
+
+        .datetime {
+            color: #9aa0a6;
+            font-size: 9px;
+            font-family: 'SF Mono', 'Monaco', monospace;
+        }
+
+        .number {
+            text-align: center;
+            font-family: 'SF Mono', 'Monaco', monospace;
+            font-size: 10px;
+        }
+
+        /* Status indicators Instagram style */
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 4px;
+        }
+
+        .status-excellent { background-color: #e1306c; }
+        .status-good { background-color: #f56040; }
+        .status-attention { background-color: #833ab4; }
+
+        /* Scrollbar refinado */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #2d2d2d;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #404040;
+            border-radius: 2px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #505050;
+        }
+
+        /* Loading state elegante */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 150px;
+            color: #9aa0a6;
+            font-size: 11px;
+        }
+
+        .loading::before {
+            content: "";
+            width: 16px;
+            height: 16px;
+            border: 2px solid #404040;
+            border-top-color: #e1306c;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive para screenshot */
+        @media screen and (max-width: 1920px) {
+            body { zoom: 67%; }
+        }
+
+        /* Headers com gradiente Instagram */
+        .column-header.left {
+            background: linear-gradient(135deg, #833ab4 0%, #e1306c 50%, #f56040 100%);
+        }
+
+        .column-header.right {
+            background: linear-gradient(135deg, #f56040 0%, #e1306c 50%, #833ab4 100%);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h3>REGISTROS ROI</h3>
+            <div class="menu-item">ROI (Geral)</div>
+            <div class="menu-item active">ROI (Perfil)</div>
+            <div class="menu-item">ROI (Grupo)</div>
+            <div class="menu-item" style="margin-top: 20px; border-top: 1px solid #404040; padding-top: 15px;">Controle Grupos</div>
+        </div>
+
+        <div class="main-content">
+            <div class="header">
+                <h1>PERFIL</h1>
+                <div class="subtitle" id="dateRange">Instagram - Carregando dados...</div>
+            </div>
+
+            <div class="content-area">
+                <!-- Coluna Esquerda: ROI Cumulativo Instagram -->
+                <div class="column">
+                    <div class="column-header left">
+                        <div class="column-title">Data e Hora ↓</div>
+                        <div class="column-subtitle">Valor Usado | Vendas | ROI (Instagram Total)</div>
+                    </div>
+                    <div class="data-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 25%;">Data e Hora</th>
+                                    <th style="width: 24%;">Valor Usado</th>
+                                    <th style="width: 24%;">Vendas</th>
+                                    <th style="width: 15%;">ROI</th>
+                                    <th style="width: 8%;">●</th>
+                                    <th style="width: 4%;">📱</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cumulativeData">
+                                <tr><td colspan="6" class="loading">Carregando Instagram...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Coluna Direita: ROI da Última Faixa Instagram -->
+                <div class="column">
+                    <div class="column-header right">
+                        <div class="column-title">Data e Hora ↓</div>
+                        <div class="column-subtitle">Valor Usado | Vendas | ROI (Instagram Faixa 30min)</div>
+                    </div>
+                    <div class="data-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 25%;">Data e Hora</th>
+                                    <th style="width: 24%;">Valor Usado</th>
+                                    <th style="width: 24%;">Vendas</th>
+                                    <th style="width: 15%;">ROI</th>
+                                    <th style="width: 8%;">●</th>
+                                    <th style="width: 4%;">💰</th>
+                                </tr>
+                            </thead>
+                            <tbody id="intervalData">
+                                <tr><td colspan="6" class="loading">Carregando faixa...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function formatCurrency(value) {
+            return 'R$ ' + parseFloat(value || 0).toLocaleString('pt-BR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        function formatROI(roi) {
+            const value = parseFloat(roi || 0);
+            let className = 'roi-attention';
+            
+            if (value >= 2.5) {
+                className = 'roi-excellent';
+            } else if (value >= 1.5) {
+                className = 'roi-good';
+            }
+            
+            return `<span class="${className}">${value.toFixed(2)}</span>`;
+        }
+
+        function getStatusIndicator(roi) {
+            const value = parseFloat(roi || 0);
+            let statusClass = 'status-attention';
+            
+            if (value >= 2.5) {
+                statusClass = 'status-excellent';
+            } else if (value >= 1.5) {
+                statusClass = 'status-good';
+            }
+            
+            return `<span class="status-dot ${statusClass}"></span>`;
+        }
+
+        function getInstagramIcon(index) {
+            const icons = ['🔥', '📈', '💎', '⭐', '🚀'];
+            return icons[index % icons.length];
+        }
+
+        function getMoneyIcon(value) {
+            if (value >= 1000) return '💰';
+            if (value >= 500) return '💵';
+            return '💳';
+        }
+
+        async function loadData() {
+            try {
+                const response = await fetch('/api/imperio/looker/perfil');
+                const data = await response.json();
+                
+                // Atualizar período
+                document.getElementById('dateRange').textContent = data.dateRange || 'Instagram - Dados não disponíveis';
+                
+                // Preencher dados cumulativos (coluna esquerda)
+                const cumulativeBody = document.getElementById('cumulativeData');
+                cumulativeBody.innerHTML = '';
+                
+                if (data.cumulativeData && data.cumulativeData.length > 0) {
+                    data.cumulativeData.forEach((row, index) => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td class="datetime">${row.dateTime}</td>
+                            <td class="currency">${formatCurrency(row.valorUsado)}</td>
+                            <td class="currency">${formatCurrency(row.vendas)}</td>
+                            <td>${formatROI(row.roi)}</td>
+                            <td>${getStatusIndicator(row.roi)}</td>
+                            <td class="number">${getInstagramIcon(index)}</td>
+                        `;
+                        cumulativeBody.appendChild(tr);
+                    });
+                } else {
+                    cumulativeBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #9aa0a6; padding: 20px;">Nenhum dado Instagram disponível</td></tr>';
+                }
+                
+                // Preencher dados da faixa (coluna direita)
+                const intervalBody = document.getElementById('intervalData');
+                intervalBody.innerHTML = '';
+                
+                if (data.intervalData && data.intervalData.length > 0) {
+                    data.intervalData.forEach(row => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td class="datetime">${row.dateTime}</td>
+                            <td class="currency">${formatCurrency(row.valorUsado)}</td>
+                            <td class="currency">${formatCurrency(row.vendas)}</td>
+                            <td>${formatROI(row.roi)}</td>
+                            <td>${getStatusIndicator(row.roi)}</td>
+                            <td class="number">${getMoneyIcon(row.vendas)}</td>
+                        `;
+                        intervalBody.appendChild(tr);
+                    });
+                } else {
+                    intervalBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #9aa0a6; padding: 20px;">Nenhum dado da faixa disponível</td></tr>';
+                }
+                
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+                document.getElementById('cumulativeData').innerHTML = '<tr><td colspan="6" style="color: #ea4335; text-align: center; padding: 20px;">Erro ao carregar dados Instagram</td></tr>';
+                document.getElementById('intervalData').innerHTML = '<tr><td colspan="6" style="color: #ea4335; text-align: center; padding: 20px;">Erro ao carregar dados da faixa</td></tr>';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+            // setInterval(loadData, 30000); // DESABILITADO - causava consultas excessivas
+            console.log('Auto-refresh desabilitado para reduzir consultas ao banco');
+        });
+    </script>
+</body>
+</html>
