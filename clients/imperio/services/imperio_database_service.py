@@ -26,7 +26,7 @@ class ImperioDatabaseService:
             # CORRIGIDO: Usar DailySnapshot que contém os dados REAIS
             snapshots = db.query(DailySnapshot).filter(
                 DailySnapshot.date >= today_brazil,
-                DailySnapshot.product_id == "6904ea540d0e097d618827fc"
+                DailySnapshot.product_id == "68ff78f80d0e097d617d472b"
             ).order_by(DailySnapshot.collected_at.asc()).all()
             
             # Processar dados cumulativos REAIS
@@ -94,7 +94,7 @@ class ImperioDatabaseService:
             instagram_data = db.query(ChannelData).filter(
                 ChannelData.date >= today_brazil - timedelta(days=1),
                 ChannelData.channel_name == "instagram",
-                ChannelData.product_id == "6904ea540d0e097d618827fc"
+                ChannelData.product_id == "68ff78f80d0e097d617d472b"
             ).order_by(ChannelData.collected_at.asc()).all()
             
             # Processar dados cumulativos do Instagram
@@ -162,7 +162,7 @@ class ImperioDatabaseService:
             grupos_data = db.query(ChannelData).filter(
                 ChannelData.date >= today_brazil - timedelta(days=1),
                 ChannelData.channel_name == "grupos",
-                ChannelData.product_id == "6904ea540d0e097d618827fc"
+                ChannelData.product_id == "68ff78f80d0e097d617d472b"
             ).order_by(ChannelData.collected_at.asc()).all()
             
             # Processar dados cumulativos dos Grupos
@@ -229,7 +229,7 @@ class ImperioDatabaseService:
             # Buscar último snapshot do dia (dados mais recentes)
             latest_snapshot = db.query(DailySnapshot).filter(
                 DailySnapshot.date == today_brazil,
-                DailySnapshot.product_id == "6904ea540d0e097d618827fc"
+                DailySnapshot.product_id == "68ff78f80d0e097d617d472b"
             ).order_by(DailySnapshot.collected_at.desc()).first()
 
             if not latest_snapshot:
@@ -237,7 +237,7 @@ class ImperioDatabaseService:
                 yesterday = today_brazil - timedelta(days=1)
                 latest_snapshot = db.query(DailySnapshot).filter(
                     DailySnapshot.date == yesterday,
-                    DailySnapshot.product_id == "6904ea540d0e097d618827fc"
+                    DailySnapshot.product_id == "68ff78f80d0e097d617d472b"
                 ).order_by(DailySnapshot.collected_at.desc()).first()
 
             # Buscar dados por canal (mais recentes de hoje)
@@ -246,7 +246,7 @@ class ImperioDatabaseService:
                 channel_record = db.query(ChannelData).filter(
                     ChannelData.date == today_brazil,
                     ChannelData.channel_name == channel,
-                    ChannelData.product_id == "6904ea540d0e097d618827fc"
+                    ChannelData.product_id == "68ff78f80d0e097d617d472b"
                 ).order_by(ChannelData.collected_at.desc()).first()
                 
                 if channel_record:
