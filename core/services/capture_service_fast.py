@@ -27,6 +27,7 @@ class ImperioCaptureServiceFast:
             "geral": "http://localhost:8002/imperio#geral",
             "perfil": "http://localhost:8002/imperio#perfil",
             "grupos": "http://localhost:8002/imperio#grupos",
+            "acaoprincipal": "http://localhost:8002/imperio#acaoprincipal",
             "horapix": "http://localhost:8002/imperio#horapix"
         }
     
@@ -89,7 +90,8 @@ class ImperioCaptureServiceFast:
             for page_name, url in self.pages.items():
                 try:
                     logger.info(f"Capturando {page_name}...")
-                    
+                    logger.info(f"URL: {url}")  # Log da URL sendo acessada
+
                     # Verificar se servidor está respondendo primeiro
                     import requests
                     try:
@@ -100,10 +102,57 @@ class ImperioCaptureServiceFast:
                     except Exception as e:
                         logger.error(f"Servidor inacessível: {str(e)[:50]}")
                         continue
-                    
+
                     # Load page com tratamento de timeout
                     try:
+                        logger.info(f"Navegando para {page_name}: {url}")
                         driver.get(url)
+
+                        # Aguardar JavaScript processar a navegação (maior delay para acaoprincipal)
+                        if page_name == "acaoprincipal":
+                            time.sleep(2)
+                        else:
+                            time.sleep(1)
+
+                        # Verificar se realmente navegou para a URL correta
+                        current_url = driver.current_url
+                        logger.info(f"URL atual após navegação: {current_url}")
+
+                        # Para acaoprincipal, forçar a exibição da view usando JavaScript se necessário
+                        if page_name == "acaoprincipal":
+                            logger.info("Forçando exibição de acaoprincipal...")
+                            # Executar JavaScript para garantir que acaoprincipal está visível
+                            driver.execute_script("""
+                                // Ocultar todas as outras views
+                                const orcamentoDashboard = document.getElementById('orcamentoDashboard');
+                                const twoColumnView = document.getElementById('twoColumnView');
+                                const horaPixView = document.getElementById('horaPixView');
+                                const acaoPrincipalView = document.getElementById('acaoprincipal-view');
+
+                                if (orcamentoDashboard) orcamentoDashboard.style.display = 'none';
+                                if (twoColumnView) twoColumnView.style.display = 'none';
+                                if (horaPixView) horaPixView.style.display = 'none';
+
+                                // Mostrar acaoprincipal
+                                if (acaoPrincipalView) {
+                                    acaoPrincipalView.style.display = 'block';
+                                    console.log('Acao Principal view ativada');
+                                }
+                            """)
+                            time.sleep(1)
+
+                            # Fazer reload da página para garantir carregamento completo
+                            logger.info("Recarregando página para forçar carregamento completo...")
+                            driver.refresh()
+                            time.sleep(3)  # Aguardar refresh
+
+                            # Verificar se a view está visível agora
+                            view_visible = driver.execute_script("""
+                                const view = document.getElementById('acaoprincipal-view');
+                                return view && view.style.display !== 'none';
+                            """)
+                            logger.info(f"View acaoprincipal visível: {view_visible}")
+
                     except Exception as e:
                         if "timeout" in str(e).lower():
                             logger.warning(f"Timeout em {page_name}, tentando novamente...")
@@ -113,10 +162,147 @@ class ImperioCaptureServiceFast:
                             raise e
                     
                     # Wait para dashboard carregar - DIFERENCIADO por página
-                    if page_name == "horapix":
-                        # HORA DO PIX precisa aguardar chamada API + renderização
-                        logger.info("Hora do Pix detectada - aguardando carregamento completo dos dados...")
+                    if page_name == "acaoprincipal":
+                        # AÇÃO PRINCIPAL precisa aguardar carregamento de dados e tabela EXPANDIDA
+                        logger.info("Acao Principal detectada - aguardando carregamento completo com tabela expandida...")
                         time.sleep(5)  # Wait inicial para página carregar
+
+                        # Primeiro, aguardar que o loading desapareça (até 60 segundos)
+                        logger.info("Aguardando que os dados sejam carregados (loading desapareça)...")
+                        max_wait = 60
+                        waited = 0
+                        loading_gone = False
+
+                        while waited < max_wait:
+                            try:
+                                # Verificar se loading desapareceu
+                                is_loading = driver.execute_script("""
+                                    const loadingDiv = document.getElementById('acaoprincipal-loading');
+                                    return loadingDiv && loadingDiv.style.display !== 'none';
+                                """)
+
+                                if not is_loading:
+                                    logger.info(f"Loading desapareceu após {waited}s - dados carregados!")
+                                    loading_gone = True
+                                    break
+
+                                time.sleep(1)
+                                waited += 1
+                            except:
+                                time.sleep(1)
+                                waited += 1
+
+                        if not loading_gone:
+                            logger.warning(f"Timeout aguardando loading desaparecer ({max_wait}s)")
+
+                        # Aguardar um pouco mais para garantir renderização
+                        time.sleep(2)
+
+                        kpi_loaded = loading_gone
+
+                        # Agora forçar a expansão da tabela (toggle dos detalhes)
+                        if kpi_loaded:
+                            try:
+                                logger.info("Expandindo tabela detalhada da Acao Principal...")
+                                # Executar JavaScript para abrir os detalhes da ação
+                                driver.execute_script("""
+                                    // Encontrar o primeiro action-bar e expandir seus detalhes
+                                    const actionBar = document.querySelector('.action-bar');
+                                    if (actionBar) {
+                                        // Encontrar o ID da ação a partir do data-action-id se existir
+                                        let actionId = actionBar.getAttribute('data-action-id');
+
+                                        // Se não tiver, tentar extrair da estrutura DOM
+                                        if (!actionId) {
+                                            // Procurar pelo padrão de ID nos elementos
+                                            const details = actionBar.querySelector('[id^="action-details-"]');
+                                            if (details) {
+                                                actionId = details.id.replace('action-details-', '');
+                                            }
+                                        }
+
+                                        if (actionId) {
+                                            // Chamar a função toggleActionDetails se existir
+                                            if (typeof window.toggleActionDetails === 'function') {
+                                                window.toggleActionDetails(actionId);
+                                            }
+                                        }
+                                    }
+                                """)
+                                logger.info("Aguardando carregamento da tabela expandida...")
+                                time.sleep(3)  # Aguardar expansão com mais tempo
+                            except Exception as e:
+                                logger.warning(f"Erro ao expandir tabela: {str(e)[:50]}")
+
+                        # Aguardar até 30 segundos para a tabela carregar completamente
+                        # Simplificar a verificação - apenas verificar se há conteúdo na página
+                        logger.info("Aguardando conteúdo final da página...")
+                        max_wait = 30
+                        waited = 0
+                        content_ready = False
+
+                        while waited < max_wait:
+                            try:
+                                # Verificação simplificada: apenas ver se content está visível e tem conteúdo
+                                content_visible = driver.execute_script("""
+                                    const contentDiv = document.getElementById('acaoprincipal-content');
+                                    if (!contentDiv || contentDiv.style.display === 'none') {
+                                        return false;
+                                    }
+
+                                    // Verificar se há KPI cards ou ações
+                                    const hasKpi = document.querySelector('.action-kpi-card') !== null;
+                                    const hasActions = document.querySelector('.action-bar') !== null;
+
+                                    return hasKpi || hasActions;
+                                """)
+
+                                if content_visible:
+                                    logger.info(f"Conteúdo da página pronto após {waited}s")
+                                    content_ready = True
+                                    break
+
+                                time.sleep(1)
+                                waited += 1
+                            except:
+                                time.sleep(1)
+                                waited += 1
+
+                        if not content_ready:
+                            logger.warning(f"Timeout ou conteúdo não carregado ({waited}s)")
+
+                        # Wait final para garantir renderização completa
+                        time.sleep(3)
+                    elif page_name == "horapix":
+                        # HORA DO PIX precisa aguardar chamada API + renderização
+                        logger.info("Hora do Pix detectada - forçando exibição correta da view...")
+
+                        # FORÇAR exibição de horaPixView e OCULTAR as outras views
+                        driver.execute_script("""
+                            // Ocultar todas as outras views
+                            const orcamentoDashboard = document.getElementById('orcamentoDashboard');
+                            const twoColumnView = document.getElementById('twoColumnView');
+                            const horaPixView = document.getElementById('horaPixView');
+                            const acaoPrincipalView = document.getElementById('acaoprincipal-view');
+
+                            if (orcamentoDashboard) orcamentoDashboard.style.display = 'none';
+                            if (twoColumnView) twoColumnView.style.display = 'none';
+                            if (acaoPrincipalView) acaoPrincipalView.style.display = 'none';
+
+                            // Mostrar horaPixView
+                            if (horaPixView) {
+                                horaPixView.style.display = 'block';
+                                console.log('Hora do Pix view ativada');
+                            }
+                        """)
+
+                        # Fazer reload da página para garantir carregamento completo
+                        logger.info("Recarregando página para forçar carregamento completo...")
+                        driver.refresh()
+                        time.sleep(3)  # Aguardar refresh
+
+                        logger.info("Aguardando carregamento completo dos dados da Hora do Pix...")
+                        time.sleep(2)  # Wait inicial para página carregar
 
                         # Aguardar até 15 segundos para dados carregarem (verificar se não tem "Carregando...")
                         max_wait = 15
