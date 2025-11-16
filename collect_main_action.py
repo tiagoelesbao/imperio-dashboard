@@ -13,7 +13,7 @@ from core.services.main_action_service import main_action_service
 logging.basicConfig(level=logging.INFO, format='%(levelname)s - %(message)s')
 
 # Product ID da ação atual (conforme screenshot)
-PRODUCT_ID = "6904ea540d0e097d618827fc"
+PRODUCT_ID = "6916292bf6051e4133d86ef9"
 
 print("="*60)
 print("COLETANDO DADOS DA AÇÃO PRINCIPAL")

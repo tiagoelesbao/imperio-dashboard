@@ -8,7 +8,7 @@ from typing import Dict, Any
 IMPERIO_CONFIG = {
     "name": "imperio",
     "title": "Império Prêmios",
-    "product_id": "6904ea540d0e097d618827fc",
+    "product_id": "6916292bf6051e4133d86ef9",
     "campaign_name": "Sorteio Principal",
     "roi_goal": 2.0,
     "daily_budget": 10000.0,
@@ -24,11 +24,10 @@ IMPERIO_CONFIG = {
             "description": "Performance do canal Instagram",
             "facebook_accounts": [
                 "act_2067257390316380",
-                "act_1391112848236399", 
+                "act_1391112848236399",
                 "act_406219475582745",
                 "act_790223756353632",
-                "act_303402486183447",
-                "act_765524492538546"
+                "act_303402486183447"
             ]
         },
         "grupos": {

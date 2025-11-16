@@ -112,17 +112,17 @@ print("3. TESTE DA QUERY DO PROBLEMA")
 print("="*60)
 
 # Query exata usada no imperio_db_service.get_looker_geral_data()
-print("\nTestando query para 'geral' com product_id='6904ea540d0e097d618827fc':")
+print("\nTestando query para 'geral' com product_id='6916292bf6051e4133d86ef9':")
 snapshots_test = db.query(DailySnapshot).filter(
     DailySnapshot.date >= today_brazil,
-    DailySnapshot.product_id == "6904ea540d0e097d618827fc"
+    DailySnapshot.product_id == "6916292bf6051e4133d86ef9"
 ).order_by(DailySnapshot.collected_at.asc()).all()
 
 print(f"Registros encontrados: {len(snapshots_test)}")
 
 if len(snapshots_test) == 0:
     print("\n[!] PROBLEMA IDENTIFICADO!")
-    print("Nao ha registros com product_id='6904ea540d0e097d618827fc' para hoje.")
+    print("Nao ha registros com product_id='6916292bf6051e4133d86ef9' para hoje.")
 
     # Verificar se há registros com outro product_id
     print("\nVerificando registros de hoje com QUALQUER product_id:")
@@ -163,7 +163,7 @@ print("="*60)
 
 if len(snapshots_test) == 0:
     print("[X] PROBLEMA CONFIRMADO:")
-    print("   O servico esta buscando product_id='6904ea540d0e097d618827fc'")
+    print("   O servico esta buscando product_id='6916292bf6051e4133d86ef9'")
     print("   mas os dados estao sendo salvos com outro product_id.")
     print("\n[SOLUCAO NECESSARIA]:")
     print("   1. Atualizar o product_id no imperio_database_service.py")

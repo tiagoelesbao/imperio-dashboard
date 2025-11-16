@@ -93,7 +93,7 @@ def test_complete_collection():
         if current:
             product_id = current['product_id']
         else:
-            product_id = '6904ea540d0e097d618827fc'  # ID padrão
+            product_id = '6916292bf6051e4133d86ef9'  # ID padrão
 
         # Coletar dados
         ma_result = main_action_service.collect_and_save(db, product_id)

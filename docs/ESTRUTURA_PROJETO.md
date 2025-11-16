@@ -168,7 +168,7 @@ cd tests && python test_horapix.py
 
 ### Product ID Atual
 ```
-6904ea540d0e097d618827fc
+6916292bf6051e4133d86ef9
 ```
 
 ### Arquivo de Configuração

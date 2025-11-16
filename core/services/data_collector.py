@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Data Collector - Coleta REAL de dados das APIs
-Focado APENAS na ação 6904ea540d0e097d618827fc
+Focado APENAS na ação 6916292bf6051e4133d86ef9
 """
 
 import requests
@@ -28,12 +28,12 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class ImperioDataCollector:
-    """Coletor de dados para a ação 6904ea540d0e097d618827fc"""
+    """Coletor de dados para a ação 6916292bf6051e4133d86ef9"""
 
     def __init__(self):
         """Inicializar coletor com tratamento de erros"""
         # Configurações da ação específica
-        self.PRODUCT_ID = "6904ea540d0e097d618827fc"
+        self.PRODUCT_ID = "6916292bf6051e4133d86ef9"
         
         # URLs das APIs (baseado exatamente no código original)
         self.URL_LOGIN = "https://node209534-imperiopremioss.sp1.br.saveincloud.net.br/api/auth/login"
@@ -61,8 +61,7 @@ class ImperioDataCollector:
             'act_406219475582745',
             'act_790223756353632',
             'act_772777644802886',
-            'act_303402486183447',
-            'act_765524492538546'
+            'act_303402486183447'
         ]
         
         self.token_cache = None
@@ -729,8 +728,7 @@ class ImperioDataCollector:
                     "act_1391112848236399",
                     "act_406219475582745",
                     "act_790223756353632",
-                    "act_303402486183447",
-                    "act_765524492538546"
+                    "act_303402486183447"
                 ],
                 "grupos": [
                     "act_772777644802886"

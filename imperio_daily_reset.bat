@@ -37,7 +37,12 @@ timeout /t 2 /nobreak >nul
 
 REM Limpar screenshots antigos
 echo [LIMPEZA] Removendo screenshots antigos...
-if exist "screenshots\*.png" del /Q "screenshots\*.png" >nul 2>&1
+if exist "screenshots\*.png" (
+    del /Q "screenshots\*.png" >nul 2>&1
+    echo [LIMPEZA] Screenshots antigos removidos
+) else (
+    echo [LIMPEZA] Nenhum screenshot antigo encontrado
+)
 
 REM Limpar logs antigos (manter ultimos 7 dias)
 echo [LIMPEZA] Limpando logs antigos...
@@ -146,7 +151,7 @@ echo.
 echo [ACAO PRINCIPAL] Coletando dados do sorteio vigente...
 
 REM Executar coleta da Ação Principal
-.\venv\Scripts\python.exe -c "from core.database.base import SessionLocal; from core.services.main_action_service import main_action_service; db = SessionLocal(); current = main_action_service.get_current_action(db); product_id = current['product_id'] if current else '6904ea540d0e097d618827fc'; result = main_action_service.collect_and_save(db, product_id); action = main_action_service.get_current_action(db); db.close(); print('[ACAO PRINCIPAL] === DADOS COLETADOS ==='); print(f'[ACAO PRINCIPAL] Nome: {action[\"name\"]}' if action else '[ACAO PRINCIPAL] Nenhuma acao vigente'); print(f'[ACAO PRINCIPAL] Receita: R$ {action[\"total_revenue\"]:,.2f}' if action else ''); print(f'[ACAO PRINCIPAL] Custos FB: R$ {action[\"total_fb_cost\"]:,.2f}' if action else ''); print(f'[ACAO PRINCIPAL] Lucro: R$ {action[\"total_profit\"]:,.2f}' if action else ''); print(f'[ACAO PRINCIPAL] ROI: {action[\"total_roi\"]:.2f}%%' if action else ''); print(f'[ACAO PRINCIPAL] Registros diarios: {len(action[\"daily_records\"]) if action and \"daily_records\" in action else 0}')" 2>>data\logs\daily_reset.log
+.\venv\Scripts\python.exe -c "from core.database.base import SessionLocal; from core.services.main_action_service import main_action_service; db = SessionLocal(); current = main_action_service.get_current_action(db); product_id = current['product_id'] if current else '6916292bf6051e4133d86ef9'; result = main_action_service.collect_and_save(db, product_id); action = main_action_service.get_current_action(db); db.close(); print('[ACAO PRINCIPAL] === DADOS COLETADOS ==='); print(f'[ACAO PRINCIPAL] Nome: {action[\"name\"]}' if action else '[ACAO PRINCIPAL] Nenhuma acao vigente'); print(f'[ACAO PRINCIPAL] Receita: R$ {action[\"total_revenue\"]:,.2f}' if action else ''); print(f'[ACAO PRINCIPAL] Custos FB: R$ {action[\"total_fb_cost\"]:,.2f}' if action else ''); print(f'[ACAO PRINCIPAL] Lucro: R$ {action[\"total_profit\"]:,.2f}' if action else ''); print(f'[ACAO PRINCIPAL] ROI: {action[\"total_roi\"]:.2f}%%' if action else ''); print(f'[ACAO PRINCIPAL] Registros diarios: {len(action[\"daily_records\"]) if action and \"daily_records\" in action else 0}')" 2>>data\logs\daily_reset.log
 
 if errorlevel 1 (
     echo [ACAO PRINCIPAL] Aviso: Coleta falhou - sera tentada novamente na proxima execucao
@@ -250,7 +255,8 @@ echo.
 echo [AUTOMACAO] Sistema configurado para:
 echo   - Coleta sistema principal: XX:00 e XX:30
 echo   - Coleta Hora do Pix: XX:00 e XX:30 (integrado)
-echo   - Captura + WhatsApp: XX:01 e XX:31 (4 abas)
+echo   - Coleta Acao Principal: XX:00 e XX:30 (integrado)
+echo   - Captura + WhatsApp: XX:01 e XX:31 (5 abas)
 echo   - Dashboard: http://localhost:8002/imperio
 echo.
 
@@ -279,7 +285,7 @@ echo   [OK] Hora do Pix coletado (sorteios + taxa 3%%)
 echo   [OK] Acao Principal atualizada (sorteio vigente)
 echo   [OK] Screenshots capturados com OTIMIZACAO PARA DIA COMPLETO
 echo   [OK] Captura configurada para 38 coletas diarias (04:30-23:30)
-echo   [OK] 4 abas capturadas: geral, perfil, grupos, horapix
+echo   [OK] 5 abas capturadas: geral, perfil, grupos, acaoprincipal, horapix
 echo   [OK] Altura minima 1500px + deteccao inteligente de conteudo
 echo   [OK] WhatsApp configurado
 echo   [OK] Servidor rodando com scheduler integrado
@@ -293,7 +299,8 @@ echo.
 echo Proximas execucoes automaticas:
 echo   - Coletas sistema principal: XX:00 e XX:30 (via scheduler do servidor)
 echo   - Coletas Hora do Pix: XX:00 e XX:30 (integrado no scheduler)
-echo   - Capturas: XX:01 e XX:31 (4 abas: geral, perfil, grupos, horapix)
+echo   - Coletas Acao Principal: XX:00 e XX:30 (integrado no scheduler)
+echo   - Capturas: XX:01 e XX:31 (5 abas: geral, perfil, grupos, acaoprincipal, horapix)
 echo.
 echo O servidor core.app mantem o sistema rodando 24/7
 echo com scheduler integrado para coletas automaticas.
