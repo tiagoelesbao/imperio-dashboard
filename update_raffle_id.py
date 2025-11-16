@@ -218,12 +218,50 @@ class RaffleIDUpdater:
         print(f"TOTAL DE SUBSTITUIÇÕES: {total}")
         print("="*70)
 
-        print("\n[✓] Atualização concluída com sucesso!")
+        print("\n[OK] Atualização concluída com sucesso!")
         print("\nPróximos passos:")
-        print("   1. Verificar as alterações com: git diff")
-        print("   2. Testar o sistema: python tests/test_complete_collection.py")
+        print("   1. Recarregar frontend: Ctrl+F5")
+        print("   2. Verificar dados em: http://localhost:8002/imperio#acaoprincipal")
         print("   3. Fazer commit: git add . && git commit")
-        print("   4. Reiniciar o sistema: imperio_start.bat")
+        print("   4. Push para repositório: git push origin main")
+
+    def collect_fresh_data(self) -> bool:
+        """Coletar dados frescos da ação principal com novo ID"""
+        try:
+            print("\n" + "="*70)
+            print("COLETANDO DADOS FRESCOS DA ACAO PRINCIPAL")
+            print("="*70)
+            print(f"Aguardando coleta de dados para o novo ID: {self.new_id}")
+            print()
+
+            # Executar coleta de dados
+            result = subprocess.run(
+                [sys.executable, 'collect_main_action.py'],
+                capture_output=True,
+                text=True,
+                timeout=120
+            )
+
+            # Filtrar output importante
+            output_lines = result.stdout.split('\n')
+            for line in output_lines:
+                if any(keyword in line for keyword in ['OK', 'Dados salvos', 'COLETANDO', 'TOTAIS', 'RESUMO', '===', 'Receita:', 'Custos', 'Lucro', 'ROI', 'Prêmio', 'Período', 'Dias', 'vendas']):
+                    if line.strip():
+                        print(line)
+
+            if result.returncode == 0:
+                print("\n[OK] Dados frescos coletados com sucesso!")
+                return True
+            else:
+                print("\n[AVISO] Coleta de dados finalizada")
+                return True  # Não falhar a execução se coleta teve problema
+
+        except subprocess.TimeoutExpired:
+            print("[AVISO] Coleta de dados expirou (timeout)")
+            return True  # Não falhar
+        except Exception as e:
+            print(f"[AVISO] Erro ao coletar dados: {e}")
+            return True  # Não falhar
 
     def migrate_database(self) -> bool:
         """Migrar o banco de dados com o novo ID"""
@@ -288,6 +326,10 @@ class RaffleIDUpdater:
             if not self.update_files():
                 print("\n[ERRO] Falha durante a atualização dos arquivos")
                 return False
+
+            # Executar coleta de dados frescos ANTES de migrar o banco
+            print()
+            self.collect_fresh_data()
 
             # Executar migração do banco de dados
             print()
