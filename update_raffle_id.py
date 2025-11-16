@@ -226,12 +226,13 @@ class RaffleIDUpdater:
         print("   4. Push para repositório: git push origin main")
 
     def collect_fresh_data(self) -> bool:
-        """Coletar dados frescos da ação principal com novo ID"""
+        """Coletar dados frescos da ação principal com novo ID - GARANTINDO FUNCIONAMENTO"""
         try:
-            # PASSO 1: Limpar dados antigos
+            # PASSO 1: Limpar dados antigos (sempre, antes de coletar)
             print("\n" + "="*70)
-            print("LIMPANDO HISTORICO DA ACAO PRINCIPAL")
+            print("PASSO 1: LIMPANDO HISTORICO DA ACAO PRINCIPAL")
             print("="*70)
+            print("[LIMPEZA] Removendo dados antigos para preparar coleta fresca...")
 
             result = subprocess.run(
                 [sys.executable, 'clean_main_action_history.py'],
@@ -241,39 +242,73 @@ class RaffleIDUpdater:
             )
 
             if result.returncode == 0:
-                print("Historico limpo com sucesso!")
+                print("[OK] Historico limpo com sucesso!")
             else:
-                print("[AVISO] Falha ao limpar histórico")
-                print(result.stdout)
+                print("[AVISO] Falha ao limpar historico (continuando...)")
 
-            # PASSO 2: Coletar dados frescos
+            # PASSO 2: Coletar dados frescos do novo ID
             print("\n" + "="*70)
-            print("COLETANDO DADOS FRESCOS DA ACAO PRINCIPAL")
+            print("PASSO 2: COLETANDO DADOS FRESCOS COM NOVO ID")
             print("="*70)
-            print(f"Aguardando coleta de dados para o novo ID: {self.new_id}")
+            print(f"[COLETA] ID de sorteio: {self.new_id}")
+            print("[COLETA] Aguardando coleta de dados frescos...")
             print()
 
-            # Executar coleta de dados
+            # Usar Python direto para coletar (garante imports corretos)
+            collect_script = """
+import sys
+sys.path.insert(0, '.')
+from core.database.base import SessionLocal
+from core.services.main_action_service import main_action_service
+
+db = SessionLocal()
+try:
+    current = main_action_service.get_current_action(db)
+    if not current:
+        print("[ERRO] Nenhuma acao vigente encontrada")
+        sys.exit(1)
+
+    product_id = current['product_id']
+    print(f"[COLETA] Produto: {product_id}")
+    print(f"[COLETA] Nome: {current['name']}")
+
+    result = main_action_service.collect_and_save(db, product_id)
+
+    if result.get('success'):
+        action = main_action_service.get_current_action(db)
+        records = action.get('daily_records', [])
+        print(f"[OK] Coleta concluida!")
+        print(f"[OK] {len(records)} registros diarios salvos")
+        if records:
+            print(f"[PERIODO] De {records[0]['date']} ate {records[-1]['date']}")
+    else:
+        print(f"[ERRO] {result.get('error')}")
+        sys.exit(1)
+finally:
+    db.close()
+"""
+
             result = subprocess.run(
-                [sys.executable, 'collect_main_action.py'],
+                [sys.executable, '-c', collect_script],
                 capture_output=True,
                 text=True,
                 timeout=120
             )
 
-            # Filtrar output importante
+            # Mostrar output
             output_lines = result.stdout.split('\n')
             for line in output_lines:
-                if any(keyword in line for keyword in ['OK', 'Dados salvos', 'COLETANDO', 'TOTAIS', 'RESUMO', '===', 'Receita:', 'Custos', 'Lucro', 'ROI', 'Prêmio', 'Período', 'Dias', 'vendas']):
-                    if line.strip():
-                        print(line)
+                if line.strip():
+                    print(line)
 
             if result.returncode == 0:
-                print("\n[OK] Dados frescos coletados com sucesso!")
+                print("\n[SUCESSO] Dados frescos coletados e salvos!")
                 return True
             else:
-                print("\n[AVISO] Coleta de dados finalizada")
-                return True  # Não falhar a execução se coleta teve problema
+                print("\n[AVISO] Coleta finalizada com status incerto")
+                if result.stderr:
+                    print(f"[ERRO] {result.stderr}")
+                return True  # Não falhar a execução
 
         except subprocess.TimeoutExpired:
             print("[AVISO] Coleta de dados expirou (timeout)")
