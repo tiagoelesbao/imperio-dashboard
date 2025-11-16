@@ -17,6 +17,7 @@ O script:
 import os
 import re
 import sys
+import subprocess
 from pathlib import Path
 from typing import Tuple, List, Dict
 
@@ -224,6 +225,33 @@ class RaffleIDUpdater:
         print("   3. Fazer commit: git add . && git commit")
         print("   4. Reiniciar o sistema: imperio_start.bat")
 
+    def migrate_database(self) -> bool:
+        """Migrar o banco de dados com o novo ID"""
+        try:
+            print("\n" + "="*70)
+            print("MIGRANDO BANCO DE DADOS")
+            print("="*70)
+
+            # Executar script de migração
+            result = subprocess.run(
+                [sys.executable, 'migrate_raffle_id.py', self.current_id, self.new_id],
+                capture_output=True,
+                text=True
+            )
+
+            if result.returncode == 0:
+                print(result.stdout)
+                return True
+            else:
+                print("[ERRO] Falha na migração do banco de dados")
+                print(result.stdout)
+                print(result.stderr)
+                return False
+
+        except Exception as e:
+            print(f"[ERRO] Falha ao executar migração: {e}")
+            return False
+
     def run(self):
         """Executar o atualizar"""
         try:
@@ -248,6 +276,7 @@ class RaffleIDUpdater:
             print(f"   De: {self.current_id}")
             print(f"   Para: {self.new_id}")
             print(f"\nArquivos que serão atualizados: {len(self.FILES_TO_UPDATE)}")
+            print(f"Banco de dados será migrado automaticamente")
 
             confirm = input("\nDeseja continuar? (s/n): ").strip().lower()
 
@@ -255,13 +284,20 @@ class RaffleIDUpdater:
                 print("\n[CANCELADO] Operação cancelada pelo usuário")
                 return False
 
-            # Executar atualização
-            if self.update_files():
-                self.show_report()
-                return True
-            else:
-                print("\n[ERRO] Falha durante a atualização")
+            # Executar atualização de arquivos
+            if not self.update_files():
+                print("\n[ERRO] Falha durante a atualização dos arquivos")
                 return False
+
+            # Executar migração do banco de dados
+            print()
+            if not self.migrate_database():
+                print("\n[AVISO] Arquivos foram atualizados, mas falha na migração do banco")
+                print("Execute manualmente: python migrate_raffle_id.py")
+                return False
+
+            self.show_report()
+            return True
 
         except KeyboardInterrupt:
             print("\n\n[CANCELADO] Operação interrompida pelo usuário")
