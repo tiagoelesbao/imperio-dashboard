@@ -142,13 +142,25 @@ REM Aguardar processamento
 timeout /t 2 /nobreak >nul
 
 REM ================================================================
+REM FASE 4.5B: LIMPAR HISTORICO DA ACAO PRINCIPAL
+REM ================================================================
+echo [FASE 4.5B] LIMPANDO HISTORICO DA ACAO PRINCIPAL
+echo ========================================
+echo.
+
+echo [LIMPEZA] Removendo dados antigos para preparar coleta fresca...
+.\venv\Scripts\python.exe clean_main_action_history.py 2>>data\logs\daily_reset.log
+
+echo.
+
+REM ================================================================
 REM FASE 4.6: PRIMEIRA COLETA ACAO PRINCIPAL
 REM ================================================================
 echo [FASE 4.6] EXECUTANDO COLETA ACAO PRINCIPAL
 echo ========================================
 echo.
 
-echo [ACAO PRINCIPAL] Coletando dados do sorteio vigente...
+echo [ACAO PRINCIPAL] Coletando dados frescos do sorteio vigente...
 
 REM Executar coleta da Ação Principal
 .\venv\Scripts\python.exe -c "from core.database.base import SessionLocal; from core.services.main_action_service import main_action_service; db = SessionLocal(); current = main_action_service.get_current_action(db); product_id = current['product_id'] if current else '6916292bf6051e4133d86ef9'; result = main_action_service.collect_and_save(db, product_id); action = main_action_service.get_current_action(db); db.close(); print('[ACAO PRINCIPAL] === DADOS COLETADOS ==='); print(f'[ACAO PRINCIPAL] Nome: {action[\"name\"]}' if action else '[ACAO PRINCIPAL] Nenhuma acao vigente'); print(f'[ACAO PRINCIPAL] Receita: R$ {action[\"total_revenue\"]:,.2f}' if action else ''); print(f'[ACAO PRINCIPAL] Custos FB: R$ {action[\"total_fb_cost\"]:,.2f}' if action else ''); print(f'[ACAO PRINCIPAL] Lucro: R$ {action[\"total_profit\"]:,.2f}' if action else ''); print(f'[ACAO PRINCIPAL] ROI: {action[\"total_roi\"]:.2f}%%' if action else ''); print(f'[ACAO PRINCIPAL] Registros diarios: {len(action[\"daily_records\"]) if action and \"daily_records\" in action else 0}')" 2>>data\logs\daily_reset.log

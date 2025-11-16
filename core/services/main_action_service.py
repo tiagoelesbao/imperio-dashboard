@@ -19,7 +19,7 @@ class MainActionService:
     """Serviço para gerenciamento de Ações Principais"""
 
     def collect_and_save(self, db: Session, product_id: str) -> Dict:
-        """Coleta e salva dados de uma ação"""
+        """Coleta e salva dados de uma ação (sempre fresco, sem histórico)"""
         try:
             # Coletar dados
             result = main_action_collector.collect_full_action_data(product_id)
@@ -34,6 +34,13 @@ class MainActionService:
             action = db.query(MainAction).filter(
                 MainAction.product_id == product_id
             ).first()
+
+            # LIMPAR DADOS HISTÓRICOS ANTIGOS (para sempre manter apenas dados atuais)
+            if action:
+                db.query(MainActionDaily).filter(
+                    MainActionDaily.action_id == action.id
+                ).delete()
+                logger.info(f"Dados históricos deletados para action_id={action.id}")
 
             if not action:
                 action = MainAction(

@@ -228,6 +228,25 @@ class RaffleIDUpdater:
     def collect_fresh_data(self) -> bool:
         """Coletar dados frescos da ação principal com novo ID"""
         try:
+            # PASSO 1: Limpar dados antigos
+            print("\n" + "="*70)
+            print("LIMPANDO HISTORICO DA ACAO PRINCIPAL")
+            print("="*70)
+
+            result = subprocess.run(
+                [sys.executable, 'clean_main_action_history.py'],
+                capture_output=True,
+                text=True,
+                timeout=30
+            )
+
+            if result.returncode == 0:
+                print("Historico limpo com sucesso!")
+            else:
+                print("[AVISO] Falha ao limpar histórico")
+                print(result.stdout)
+
+            # PASSO 2: Coletar dados frescos
             print("\n" + "="*70)
             print("COLETANDO DADOS FRESCOS DA ACAO PRINCIPAL")
             print("="*70)
